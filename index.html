@@ -35,26 +35,41 @@
 
     var boardScore = function(player, game) {
       var score = 0;
-      for (i = 0; i < 7; i ++)
+      for (var i = 0; i < 8; i ++)
       {
-        for (j = 0; j < 7; j ++)
+        for (var j = 0; j < 8; j ++)
         {
-          if (game.board()[i][j][color] === player)
-            score += value(game.board()[i][j][type]);
-          else if (game.board()[i][j][color] !== player)
-            score -= value(game.board()[i][j][type]);
+          if (game.board()[i][j] && game.board()[i][j]["color"] === player)
+            score += value(game.board()[i][j]["type"]);
+          else if (game.board()[i][j] && game.board()[i][j]["color"] !== player)
+            score -= value(game.board()[i][j]["type"]);
         }
       }
       return score;
     }
 
+    var minimaxAI = function(depth, findMax) {
+      var options = game.moves();
+      if (!options.length) return; 
+      if (findMax === true)
+      {
+        for (var i = 0; i < options.length; i ++)
+        {
+          
+          game.move(options[i]);
+
+          game.undo();
+        }
+      }
+    }
+
     var betterAI = function() {
       var options = game.moves();
-      if (!options.length()) return;
-      var currScore = boardScore ('b', game);
-      var bestScore = currScore;
+      if (!options.length) return; 
+      var startScore = boardScore ('b', game);
+      var bestScore = startScore;
       var moveIndex = -1;
-      for (i = 0; i < options.length(); i++)
+      for (i = 0; i < options.length; i++)
       {
         game.move(options[i]);
         if (boardScore('b', game) > bestScore)
@@ -64,9 +79,9 @@
         };
         game.undo();
       }
-      if (bestScore > currScore)
+      if (bestScore > startScore)
       {
-        game.move(options[i]);
+        game.move(options[moveIndex]);
         board.position(game.fen()); 
       }
       else
