@@ -23,15 +23,65 @@
       }
     };
 
-    var makeRandomMove = function() {
-      var possibleMoves = game.moves();
+    var value = function(piece)
+    {
+      if (piece === 'r') return 50;
+      else if (piece === 'n') return 30;
+      else if (piece === 'b') return 32;
+      else if (piece === 'k') return 10000;
+      else if (piece === 'q') return 90;
+      else if (piece === 'p') return 10;
+    }
+
+    var boardScore = function(player, game) {
+      var score = 0;
+      for (i = 0; i < 7; i ++)
+      {
+        for (j = 0; j < 7; j ++)
+        {
+          if (game.board()[i][j][color] === player)
+            score += value(game.board()[i][j][type]);
+          else if (game.board()[i][j][color] !== player)
+            score -= value(game.board()[i][j][type]);
+        }
+      }
+      return score;
+    }
+
+    var betterAI = function() {
+      var options = game.moves();
+      if (!options.length()) return;
+      var currScore = boardScore ('b', game);
+      var bestScore = currScore;
+      var moveIndex = -1;
+      for (i = 0; i < options.length(); i++)
+      {
+        game.move(options[i]);
+        if (boardScore('b', game) > bestScore)
+        {
+          moveIndex = i;
+          bestScore = boardScore('b', game);
+        };
+        game.undo();
+      }
+      if (bestScore > currScore)
+      {
+        game.move(options[i]);
+        board.position(game.fen()); 
+      }
+      else
+        randomAI();
+    }
+
+    var randomAI = function() {
+      var options = game.moves();
 
       // game over
-      if (possibleMoves.length === 0) return;
+      if (!options.length) return;
 
-      var randomIndex = Math.floor(Math.random() * possibleMoves.length);
-      game.move(possibleMoves[randomIndex]);
-      board.position(game.fen());
+      var random = Math.floor(Math.random() * options.length);
+      game.move(options[random]); //make move
+      board.position(game.fen()); //update position
     };
 
     var onDrop = function(source, target) {
@@ -46,11 +96,10 @@
       if (move === null) return 'snapback';
 
       // make random legal move for black
-      window.setTimeout(makeRandomMove, 250);
+      window.setTimeout(betterAI, 250);
     };
 
-    // update the board position after the piece snap
-    // for castling, en passant, pawn promotion
+    // now that we have moved in game.move, let's update our position on the snap end
     var onSnapEnd = function() {
       board.position(game.fen());
     };
