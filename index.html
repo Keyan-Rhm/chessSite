@@ -14,6 +14,90 @@
     <script>
     var board, game = new Chess();
 
+    var pawnGrid = 
+    [
+      [ 0,  0,  0,  0,  0,  0,  0,  0],
+      [50, 50, 50, 50, 50, 50, 50, 50],
+      [10, 10, 20, 30, 30, 20, 10, 10],
+      [ 5,  5, 10, 25, 25, 10,  5,  5],
+      [ 0,  0,  0, 20, 20,  0,  0,  0],
+      [ 5, -5,-10,  0,  0,-10, -5,  5],
+      [ 5, 10, 10,-20,-20, 10, 10,  5],
+      [ 0,  0,  0,  0,  0,  0,  0,  0]
+    ]
+
+    var knightGrid = 
+    [
+      [-50,-40,-30,-30,-30,-30,-40,-50],
+      [-40,-20,  0,  0,  0,  0,-20,-40],
+      [-30,  0, 10, 15, 15, 10,  0,-30],
+      [-30,  5, 15, 20, 20, 15,  5,-30],
+      [-30,  0, 15, 20, 20, 15,  0,-30],
+      [-30,  5, 10, 15, 15, 10,  5,-30],
+      [-40,-20,  0,  5,  5,  0,-20,-40],
+      [-50,-40,-30,-30,-30,-30,-40,-50]
+    ]
+
+    var bishopGrid = 
+    [
+      [-20,-10,-10,-10,-10,-10,-10,-20],
+      [-10,  0,  0,  0,  0,  0,  0,-10],
+      [-10,  0,  5, 10, 10,  5,  0,-10],
+      [-10,  5,  5, 10, 10,  5,  5,-10],
+      [-10,  0, 10, 10, 10, 10,  0,-10],
+      [-10, 10, 10, 10, 10, 10, 10,-10],
+      [-10,  5,  0,  0,  0,  0,  5,-10],
+      [-20,-10,-10,-10,-10,-10,-10,-20]
+    ]
+
+    var rookGrid =
+    [
+      [ 0,  0,  0,  0,  0,  0,  0,  0],
+      [ 5, 10, 10, 10, 10, 10, 10,  5],
+      [-5,  0,  0,  0,  0,  0,  0, -5],
+      [-5,  0,  0,  0,  0,  0,  0, -5],
+      [-5,  0,  0,  0,  0,  0,  0, -5],
+      [-5,  0,  0,  0,  0,  0,  0, -5],
+      [-5,  0,  0,  0,  0,  0,  0, -5],
+      [ 0,  0,  0,  5,  5,  0,  0,  0]
+    ]
+
+    var queenGrid = 
+    [
+      [-20,-10,-10, -5, -5,-10,-10,-20],
+      [-10,  0,  0,  0,  0,  0,  0,-10],
+      [-10,  0,  5,  5,  5,  5,  0,-10],
+      [ -5,  0,  5,  5,  5,  5,  0, -5],
+      [  0,  0,  5,  5,  5,  5,  0, -5],
+      [-10,  5,  5,  5,  5,  5,  0,-10],
+      [-10,  0,  5,  0,  0,  0,  0,-10],
+      [-20,-10,-10, -5, -5,-10,-10,-20]
+    ]
+
+    var kingGridStart = 
+    [
+      [-30,-40,-40,-50,-50,-40,-40,-30],
+      [-30,-40,-40,-50,-50,-40,-40,-30],
+      [-30,-40,-40,-50,-50,-40,-40,-30],
+      [-30,-40,-40,-50,-50,-40,-40,-30],
+      [-20,-30,-30,-40,-40,-30,-30,-20],
+      [-10,-20,-20,-20,-20,-20,-20,-10],
+      [ 20, 20,  0,  0,  0,  0, 20, 20],
+      [ 20, 30, 10,  0,  0, 10, 30, 20]
+    ]
+
+    var kingGridEnd =
+    [
+      [-50,-40,-30,-20,-20,-30,-40,-50],
+      [-30,-20,-10,  0,  0,-10,-20,-30],
+      [-30,-10, 20, 30, 30, 20,-10,-30],
+      [-30,-10, 30, 40, 40, 30,-10,-30],
+      [-30,-10, 30, 40, 40, 30,-10,-30],
+      [-30,-10, 20, 30, 30, 20,-10,-30],
+      [-30,-30,  0,  0,  0,  0,-30,-30],
+      [-50,-30,-30,-30,-30,-30,-30,-50]
+    ]
+
     // do not pick up pieces if the game is over
     // only pick up pieces for White
     var onDragStart = function(source, piece, position, orientation) {
@@ -25,14 +109,16 @@
 
     var value = function(piece)
     {
-      if (piece === 'r') return 50;
-      else if (piece === 'n') return 30;
-      else if (piece === 'b') return 32;
-      else if (piece === 'q') return 90;
-      else if (piece === 'p') return 10;
+      if (piece === 'r') return 500;
+      else if (piece === 'n') return 320;
+      else if (piece === 'b') return 330;
+      else if (piece === 'k') return 0;
+      else if (piece === 'q') return 900;
+      else if (piece === 'p') return 100;
     }
 
     var boardScore = function(player, game) {
+      if (game.turn(player) && game.in_checkmate()) return -9999999;
       var score = 0;
       for (var i = 0; i < 8; i ++)
       {
@@ -49,7 +135,11 @@
 
     var minAI = function(depth, options) {
       if (depth === 0)
+      {
+        console.log("depth is 0 on min:");
+        console.log(boardScore('b', game));
         return boardScore('b', game);
+      }
 
       var bestMin = 9999999;
       for (var i = 0; i < options.length; i ++)
@@ -63,18 +153,20 @@
     }
 
     var maxAI = function(depth, options) {
+      var moveIndex = -1;
       if (depth === 0)
+      {
+        console.log("depth is 0 on max:");
+        console.log(boardScore('b', game));
         return boardScore('b', game);
+      }
 
       var bestMax = -9999999;
       for (var i = 0; i < options.length; i ++)
       {
         game.move(options[i]);
-        board.position(game.fen()); 
-
         bestMax = Math.max(bestMax, minAI(depth - 1, options));
         game.undo();
-        board.position(game.fen()); 
 
       }
       return bestMax;
