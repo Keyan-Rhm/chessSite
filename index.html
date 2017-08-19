@@ -28,7 +28,6 @@
       if (piece === 'r') return 50;
       else if (piece === 'n') return 30;
       else if (piece === 'b') return 32;
-      else if (piece === 'k') return 10000;
       else if (piece === 'q') return 90;
       else if (piece === 'p') return 10;
     }
@@ -48,19 +47,37 @@
       return score;
     }
 
-    var minimaxAI = function(depth, findMax) {
-      var options = game.moves();
-      if (!options.length) return; 
-      if (findMax === true)
-      {
-        for (var i = 0; i < options.length; i ++)
-        {
-          
-          game.move(options[i]);
+    var minAI = function(depth, options) {
+      if (depth === 0)
+        return boardScore('b', game);
 
-          game.undo();
-        }
+      var bestMin = 9999999;
+      for (var i = 0; i < options.length; i ++)
+      {
+        game.move(options[i]);
+        bestMin = Math.min(bestMin, maxAI(depth - 1, options));
+        game.undo();
+
       }
+      return bestMin;
+    }
+
+    var maxAI = function(depth, options) {
+      if (depth === 0)
+        return boardScore('b', game);
+
+      var bestMax = -9999999;
+      for (var i = 0; i < options.length; i ++)
+      {
+        game.move(options[i]);
+        board.position(game.fen()); 
+
+        bestMax = Math.max(bestMax, minAI(depth - 1, options));
+        game.undo();
+        board.position(game.fen()); 
+
+      }
+      return bestMax;
     }
 
     var betterAI = function() {
@@ -111,7 +128,7 @@
       if (move === null) return 'snapback';
 
       // make random legal move for black
-      window.setTimeout(betterAI, 250);
+      window.setTimeout(minAI(1, game.moves()), 250);
     };
 
     // now that we have moved in game.move, let's update our position on the snap end
