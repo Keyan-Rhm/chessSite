@@ -14,7 +14,7 @@
     <script>
     var board, game = new Chess();
 
-    var pawnGrid = 
+    window.pawnGrid = 
     [
       [ 0,  0,  0,  0,  0,  0,  0,  0],
       [50, 50, 50, 50, 50, 50, 50, 50],
@@ -26,7 +26,7 @@
       [ 0,  0,  0,  0,  0,  0,  0,  0]
     ]
 
-    var knightGrid = 
+    window.knightGrid = 
     [
       [-50,-40,-30,-30,-30,-30,-40,-50],
       [-40,-20,  0,  0,  0,  0,-20,-40],
@@ -36,9 +36,9 @@
       [-30,  5, 10, 15, 15, 10,  5,-30],
       [-40,-20,  0,  5,  5,  0,-20,-40],
       [-50,-40,-30,-30,-30,-30,-40,-50]
-    ]
+    ];
 
-    var bishopGrid = 
+    window.bishopGrid = 
     [
       [-20,-10,-10,-10,-10,-10,-10,-20],
       [-10,  0,  0,  0,  0,  0,  0,-10],
@@ -48,9 +48,9 @@
       [-10, 10, 10, 10, 10, 10, 10,-10],
       [-10,  5,  0,  0,  0,  0,  5,-10],
       [-20,-10,-10,-10,-10,-10,-10,-20]
-    ]
+    ];
 
-    var rookGrid =
+    window.rookGrid =
     [
       [ 0,  0,  0,  0,  0,  0,  0,  0],
       [ 5, 10, 10, 10, 10, 10, 10,  5],
@@ -60,9 +60,9 @@
       [-5,  0,  0,  0,  0,  0,  0, -5],
       [-5,  0,  0,  0,  0,  0,  0, -5],
       [ 0,  0,  0,  5,  5,  0,  0,  0]
-    ]
+    ];
 
-    var queenGrid = 
+    window.queenGrid = 
     [
       [-20,-10,-10, -5, -5,-10,-10,-20],
       [-10,  0,  0,  0,  0,  0,  0,-10],
@@ -72,7 +72,7 @@
       [-10,  5,  5,  5,  5,  5,  0,-10],
       [-10,  0,  5,  0,  0,  0,  0,-10],
       [-20,-10,-10, -5, -5,-10,-10,-20]
-    ]
+    ];
 
     var kingGridStart = 
     [
@@ -84,9 +84,9 @@
       [-10,-20,-20,-20,-20,-20,-20,-10],
       [ 20, 20,  0,  0,  0,  0, 20, 20],
       [ 20, 30, 10,  0,  0, 10, 30, 20]
-    ]
+    ];
 
-    var kingGridEnd =
+    window.kingGridEnd =
     [
       [-50,-40,-30,-20,-20,-30,-40,-50],
       [-30,-20,-10,  0,  0,-10,-20,-30],
@@ -96,7 +96,7 @@
       [-30,-10, 20, 30, 30, 20,-10,-30],
       [-30,-30,  0,  0,  0,  0,-30,-30],
       [-50,-30,-30,-30,-30,-30,-30,-50]
-    ]
+    ];
 
     // do not pick up pieces if the game is over
     // only pick up pieces for White
@@ -109,7 +109,7 @@
 
     var value = function(piece, i, j, player)
     {
-      if (piece === 'r') return (500 + rookGrid[x][y] * );
+      if (piece === 'r') return (500 + bonusValue('r', player, i, j));
       else if (piece === 'n') return (320 + bonusValue('n', player, i, j));
       else if (piece === 'b') return (330 + bonusValue('b', player, i, j));
       else if (piece === 'k') return (0 + bonusValue('k', player, i, j));
@@ -122,44 +122,45 @@
       if (piece === 'r')
       {
         if (player === 'b')
-          return rookGrid[i][7-j];
+          return window.rookGrid[i][7-j];
         else 
-          return rookGrid[i][j];
+          return window.rookGrid[i][j];
       }
       else if (piece === 'n')
       {
         if (player === 'b')
-          return knightGrid[i][7-j];
+          return window.knightGrid[i][7-j];
         else 
-          return knightGrid[i][j];
+          return window.knightGrid[i][j];
       }
       else if (piece === 'k')
       {
         if (player === 'b')
-          return kingGridStart[i][7-j];
+          return window.kingGridStart[i][7-j];
         else 
-          return kingGridStart[i][j];
+          return window.kingGridStart[i][j];
+        //TODO: add kingGridEnd as well, for endGame
       }
       else if (piece === 'b')
       {
         if (player === 'b')
-          return bishopGrid[i][7-j];
+          return window.bishopGrid[i][7-j];
         else 
-          return bishopGrid[i][j];
+          return window.bishopGrid[i][j];
       }
       else if (piece === 'q')
       {
         if (player === 'b')
-          return queenGrid[i][7-j];
+          return window.queenGrid[i][7-j];
         else 
-          return queenGrid[i][j];
+          return window.queenGrid[i][j];
       }
       else if (piece === 'p')
       {
         if (player === 'b')
-          return pawnGrid[i][7-j];
+          return window.pawnGrid[i][7-j];
         else 
-          return pawnGrid[i][j];
+          return window.pawnGrid[i][j];
       }
     }
 
@@ -179,7 +180,8 @@
       return score;
     }
 
-    var minAI = function(depth, options) {
+    var minAI = function(depth) {
+      var options = game.moves();
       if (depth === 0)
       {
         console.log("depth is 0 on min:");
@@ -191,20 +193,15 @@
       for (var i = 0; i < options.length; i ++)
       {
         game.move(options[i]);
-        bestMin = Math.min(bestMin, maxAI(depth - 1, options));
+        bestMin = Math.min(bestMin, maxAI(depth - 1));
         game.undo();
 
       }
-      return {
-            "s":"Images/Block_01.png"
-            ,"g":"Images/Block_02.png"
-            ,"C":"Images/Block_03.png"
-            ,"d":"Images/Block_04.png"
-      };
+      return bestMin;
     }
 
-    var maxAI = function(depth, options) {
-      var moveIndex = -1;
+    var maxAI = function(depth) {
+      var options = game.moves();
       if (depth === 0)
       {
         console.log("depth is 0 on max:");
@@ -216,16 +213,37 @@
       for (var i = 0; i < options.length; i ++)
       {
         game.move(options[i]);
-        bestMax = Math.max(bestMax, minAI(depth - 1, options));
+        bestMax = Math.max(bestMax, minAI(depth - 1));
         game.undo();
 
       }
-      return {
-            "s":"Images/Block_01.png",
-            "g":"Images/Block_02.png",
-            "C":"Images/Block_03.png",
-            "d":"Images/Block_04.png",
+      return bestMax;
+    }
+
+    var bestAI = function() {
+      var options = game.moves();
+      if (!options.length) return; 
+      var startScore = boardScore ('b', game);
+      var bestScore = startScore;
+      var moveIndex = -1;
+      for (i = 0; i < options.length; i++)
+      {
+        game.move(options[i]);
+        var moveScore = minAI(5);
+        if (moveScore > bestScore)
+        {
+          moveIndex = i;
+          bestScore = moveScore;
+        };
+        game.undo();
       }
+      if (bestScore > startScore)
+      {
+        game.move(options[moveIndex]);
+        board.position(game.fen()); 
+      }
+      else
+        randomAI();
     }
 
     var betterAI = function() {
@@ -276,7 +294,7 @@
       if (move === null) return 'snapback';
 
       // make random legal move for black
-      window.setTimeout(minAI(1, game.moves()), 250);
+      window.setTimeout(bestAI(), 250);
     };
 
     // now that we have moved in game.move, let's update our position on the snap end
