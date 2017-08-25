@@ -107,27 +107,73 @@
       }
     };
 
-    var value = function(piece)
+    var value = function(piece, i, j, player)
     {
-      if (piece === 'r') return 500;
-      else if (piece === 'n') return 320;
-      else if (piece === 'b') return 330;
-      else if (piece === 'k') return 0;
-      else if (piece === 'q') return 900;
-      else if (piece === 'p') return 100;
+      if (piece === 'r') return (500 + rookGrid[x][y] * );
+      else if (piece === 'n') return (320 + bonusValue('n', player, i, j));
+      else if (piece === 'b') return (330 + bonusValue('b', player, i, j));
+      else if (piece === 'k') return (0 + bonusValue('k', player, i, j));
+      else if (piece === 'q') return (900 + bonusValue('q', player, i, j));
+      else if (piece === 'p') return (100 + bonusValue('p', player, i, j));
+    }
+
+    var bonusValue = function(piece, player, i, j) 
+    {
+      if (piece === 'r')
+      {
+        if (player === 'b')
+          return rookGrid[i][7-j];
+        else 
+          return rookGrid[i][j];
+      }
+      else if (piece === 'n')
+      {
+        if (player === 'b')
+          return knightGrid[i][7-j];
+        else 
+          return knightGrid[i][j];
+      }
+      else if (piece === 'k')
+      {
+        if (player === 'b')
+          return kingGridStart[i][7-j];
+        else 
+          return kingGridStart[i][j];
+      }
+      else if (piece === 'b')
+      {
+        if (player === 'b')
+          return bishopGrid[i][7-j];
+        else 
+          return bishopGrid[i][j];
+      }
+      else if (piece === 'q')
+      {
+        if (player === 'b')
+          return queenGrid[i][7-j];
+        else 
+          return queenGrid[i][j];
+      }
+      else if (piece === 'p')
+      {
+        if (player === 'b')
+          return pawnGrid[i][7-j];
+        else 
+          return pawnGrid[i][j];
+      }
     }
 
     var boardScore = function(player, game) {
-      if (game.turn(player) && game.in_checkmate()) return -9999999;
+      //something about checkmate
       var score = 0;
       for (var i = 0; i < 8; i ++)
       {
         for (var j = 0; j < 8; j ++)
         {
           if (game.board()[i][j] && game.board()[i][j]["color"] === player)
-            score += value(game.board()[i][j]["type"]);
+            score += value(game.board()[i][j]["type"], player, i, j);
           else if (game.board()[i][j] && game.board()[i][j]["color"] !== player)
-            score -= value(game.board()[i][j]["type"]);
+            score -= value(game.board()[i][j]["type"], player, i, j);
         }
       }
       return score;
@@ -149,7 +195,12 @@
         game.undo();
 
       }
-      return bestMin;
+      return {
+            "s":"Images/Block_01.png"
+            ,"g":"Images/Block_02.png"
+            ,"C":"Images/Block_03.png"
+            ,"d":"Images/Block_04.png"
+      };
     }
 
     var maxAI = function(depth, options) {
@@ -169,7 +220,12 @@
         game.undo();
 
       }
-      return bestMax;
+      return {
+            "s":"Images/Block_01.png",
+            "g":"Images/Block_02.png",
+            "C":"Images/Block_03.png",
+            "d":"Images/Block_04.png",
+      }
     }
 
     var betterAI = function() {
