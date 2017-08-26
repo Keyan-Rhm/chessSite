@@ -16,112 +16,125 @@
 
     var scoreDict = [];
 
-      var pawnGridWhite = 
-      [
-        [ 0,  0,  0,  0,  0,  0,  0,  0],
-        [50, 50, 50, 50, 50, 50, 50, 50],
-        [10, 10, 20, 30, 30, 20, 10, 10],
-        [ 5,  5, 10, 25, 25, 10,  5,  5],
-        [ 0,  0,  0, 20, 20,  0,  0,  0],
-        [ 5, -5,-10,  0,  0,-10, -5,  5],
-        [ 5, 10, 10,-20,-20, 10, 10,  5],
-        [ 0,  0,  0,  0,  0,  0,  0,  0]
-      ]
+    var pawnGridWhite = 
+    [
+      [ 0,  0,  0,  0,  0,  0,  0,  0],
+      [50, 50, 50, 50, 50, 50, 50, 50],
+      [10, 10, 20, 30, 30, 20, 10, 10],
+      [ 5,  5, 10, 25, 25, 10,  5,  5],
+      [ 0,  0,  0, 20, 20,  0,  0,  0],
+      [ 5, -5,-10,  0,  0,-10, -5,  5],
+      [ 5, 10, 10,-20,-20, 10, 10,  5],
+      [ 0,  0,  0,  0,  0,  0,  0,  0]
+    ]
 
-      var pawnGridBlack = pawnGridWhite.reverse();
+    var pawnGridBlack = pawnGridWhite.reverse();
 
-      var knightGridWhite = 
-      [
-        [-50,-40,-30,-30,-30,-30,-40,-50],
-        [-40,-20,  0,  0,  0,  0,-20,-40],
-        [-30,  0, 10, 15, 15, 10,  0,-30],
-        [-30,  5, 15, 20, 20, 15,  5,-30],
-        [-30,  0, 15, 20, 20, 15,  0,-30],
-        [-30,  5, 10, 15, 15, 10,  5,-30],
-        [-40,-20,  0,  5,  5,  0,-20,-40],
-        [-50,-40,-30,-30,-30,-30,-40,-50]
-      ];
+    var knightGridWhite = 
+    [
+      [-50,-40,-30,-30,-30,-30,-40,-50],
+      [-40,-20,  0,  0,  0,  0,-20,-40],
+      [-30,  0, 10, 15, 15, 10,  0,-30],
+      [-30,  5, 15, 20, 20, 15,  5,-30],
+      [-30,  0, 15, 20, 20, 15,  0,-30],
+      [-30,  5, 10, 15, 15, 10,  5,-30],
+      [-40,-20,  0,  5,  5,  0,-20,-40],
+      [-50,-40,-30,-30,-30,-30,-40,-50]
+    ];
 
-      var knightGridBlack = knightGridWhite.reverse();
+    var knightGridBlack = knightGridWhite.reverse();
 
-      var bishopGridWhite = 
-      [
-        [-20,-10,-10,-10,-10,-10,-10,-20],
-        [-10,  0,  0,  0,  0,  0,  0,-10],
-        [-10,  0,  5, 10, 10,  5,  0,-10],
-        [-10,  5,  5, 10, 10,  5,  5,-10],
-        [-10,  0, 10, 10, 10, 10,  0,-10],
-        [-10, 10, 10, 10, 10, 10, 10,-10],
-        [-10,  5,  0,  0,  0,  0,  5,-10],
-        [-20,-10,-10,-10,-10,-10,-10,-20]
-      ];
+    var bishopGridWhite = 
+    [
+      [-20,-10,-10,-10,-10,-10,-10,-20],
+      [-10,  0,  0,  0,  0,  0,  0,-10],
+      [-10,  0,  5, 10, 10,  5,  0,-10],
+      [-10,  5,  5, 10, 10,  5,  5,-10],
+      [-10,  0, 10, 10, 10, 10,  0,-10],
+      [-10, 10, 10, 10, 10, 10, 10,-10],
+      [-10,  5,  0,  0,  0,  0,  5,-10],
+      [-20,-10,-10,-10,-10,-10,-10,-20]
+    ];
 
-      var bishopGridBlack = bishopGridWhite.reverse();
+    var bishopGridBlack = bishopGridWhite.reverse();
 
-      var rookGridWhite =
-      [
-        [ 0,  0,  0,  0,  0,  0,  0,  0],
-        [ 5, 10, 10, 10, 10, 10, 10,  5],
-        [-5,  0,  0,  0,  0,  0,  0, -5],
-        [-5,  0,  0,  0,  0,  0,  0, -5],
-        [-5,  0,  0,  0,  0,  0,  0, -5],
-        [-5,  0,  0,  0,  0,  0,  0, -5],
-        [-5,  0,  0,  0,  0,  0,  0, -5],
-        [ 0,  0,  0,  5,  5,  0,  0,  0]
-      ];
+    var rookGridWhite =
+    [
+      [ 0,  0,  0,  0,  0,  0,  0,  0],
+      [ 5, 10, 10, 10, 10, 10, 10,  5],
+      [-5,  0,  0,  0,  0,  0,  0, -5],
+      [-5,  0,  0,  0,  0,  0,  0, -5],
+      [-5,  0,  0,  0,  0,  0,  0, -5],
+      [-5,  0,  0,  0,  0,  0,  0, -5],
+      [-5,  0,  0,  0,  0,  0,  0, -5],
+      [ 0,  0,  0,  5,  5,  0,  0,  0]
+    ];
 
-      var rookGridBlack = rookGridWhite.reverse();
+    var rookGridBlack = rookGridWhite.reverse();
 
-      var queenGridWhite = 
-      [
-        [-20,-10,-10, -5, -5,-10,-10,-20],
-        [-10,  0,  0,  0,  0,  0,  0,-10],
-        [-10,  0,  5,  5,  5,  5,  0,-10],
-        [ -5,  0,  5,  5,  5,  5,  0, -5],
-        [  0,  0,  5,  5,  5,  5,  0, -5],
-        [-10,  5,  5,  5,  5,  5,  0,-10],
-        [-10,  0,  5,  0,  0,  0,  0,-10],
-        [-20,-10,-10, -5, -5,-10,-10,-20]
-      ];
+    var queenGridWhite = 
+    [
+      [-20,-10,-10, -5, -5,-10,-10,-20],
+      [-10,  0,  0,  0,  0,  0,  0,-10],
+      [-10,  0,  5,  5,  5,  5,  0,-10],
+      [ -5,  0,  5,  5,  5,  5,  0, -5],
+      [  0,  0,  5,  5,  5,  5,  0, -5],
+      [-10,  5,  5,  5,  5,  5,  0,-10],
+      [-10,  0,  5,  0,  0,  0,  0,-10],
+      [-20,-10,-10, -5, -5,-10,-10,-20]
+    ];
 
-      var queenGridBlack = queenGridWhite.reverse();
+    var queenGridBlack = queenGridWhite.reverse();
 
-      var kingGridWhiteStart = 
-      [
-        [-30,-40,-40,-50,-50,-40,-40,-30],
-        [-30,-40,-40,-50,-50,-40,-40,-30],
-        [-30,-40,-40,-50,-50,-40,-40,-30],
-        [-30,-40,-40,-50,-50,-40,-40,-30],
-        [-20,-30,-30,-40,-40,-30,-30,-20],
-        [-10,-20,-20,-20,-20,-20,-20,-10],
-        [ 20, 20,  0,  0,  0,  0, 20, 20],
-        [ 20, 30, 10,  0,  0, 10, 30, 20]
-      ];
+    var kingGridWhiteStart = 
+    [
+      [-30,-40,-40,-50,-50,-40,-40,-30],
+      [-30,-40,-40,-50,-50,-40,-40,-30],
+      [-30,-40,-40,-50,-50,-40,-40,-30],
+      [-30,-40,-40,-50,-50,-40,-40,-30],
+      [-20,-30,-30,-40,-40,-30,-30,-20],
+      [-10,-20,-20,-20,-20,-20,-20,-10],
+      [ 20, 20,  0,  0,  0,  0, 20, 20],
+      [ 20, 30, 10,  0,  0, 10, 30, 20]
+    ];
 
-      var kingGridBlackStart = kingGridWhiteStart.reverse();
+    var kingGridBlackStart = kingGridWhiteStart.reverse();
 
-      var kingGridWhiteEnd =
-      [
-        [-50,-40,-30,-20,-20,-30,-40,-50],
-        [-30,-20,-10,  0,  0,-10,-20,-30],
-        [-30,-10, 20, 30, 30, 20,-10,-30],
-        [-30,-10, 30, 40, 40, 30,-10,-30],
-        [-30,-10, 30, 40, 40, 30,-10,-30],
-        [-30,-10, 20, 30, 30, 20,-10,-30],
-        [-30,-30,  0,  0,  0,  0,-30,-30],
-        [-50,-30,-30,-30,-30,-30,-30,-50]
-      ];
+    var kingGridWhiteEnd =
+    [
+      [-50,-40,-30,-20,-20,-30,-40,-50],
+      [-30,-20,-10,  0,  0,-10,-20,-30],
+      [-30,-10, 20, 30, 30, 20,-10,-30],
+      [-30,-10, 30, 40, 40, 30,-10,-30],
+      [-30,-10, 30, 40, 40, 30,-10,-30],
+      [-30,-10, 20, 30, 30, 20,-10,-30],
+      [-30,-30,  0,  0,  0,  0,-30,-30],
+      [-50,-30,-30,-30,-30,-30,-30,-50]
+    ];
 
-      var kingGridBlackEnd = kingGridWhiteEnd.reverse();
+    var kingGridBlackEnd = kingGridWhiteEnd.reverse();
 
     // do not pick up pieces if the game is over
     // only pick up pieces for White
     var onDragStart = function(source, piece, position, orientation) {
-      if (game.in_checkmate() === true || game.in_draw() === true /*||
-        piece.search(/^b/) !== -1*/) {
+      if (game.in_checkmate() === true || game.in_draw() === true ||
+        piece.search(/^b/) !== -1) {
         return false;
       }
     };
+
+    var orderMoves = function(options) {
+      if (options.length <= 1) return;
+      for (var i = 0; i < options.length; i ++)
+      {
+        game.ugly_move(options[i]);
+        options[i].score = boardScore('b', game, maxDepth - 1);//
+        game.undo();
+      }
+      options.sort(function(a, b) {
+          return b.score - a.score;
+      });
+    }
 
     var value = function(piece, player, i, j)
     {
@@ -139,13 +152,13 @@
         (player === 'w' ? pawnGridWhite[i][j] : pawnGridBlack[i][j]));
     }
 
-    var boardScore = function(player, game) {
+    var boardScore = function(player, game, depth) {
       if (scoreDict[game.fen() + ' [' + player + ']'])
         return scoreDict(game.fen() + ' [' + player + ']');
       if (game.turn() === player && game.in_checkmate())
-        return -99999;
+        return -99999 + (maxDepth - depth) * 10;
       else if (game.turn() !== player && game.in_checkmate())
-        return 99999;
+        return 99999 - (maxDepth - depth) * 10;
       var scoreWhite = 0;
       var scoreBlack = 0;
       for (var i = 0; i < 8; i ++)
@@ -179,9 +192,8 @@
 
     var minAI = function(depth, alpha, beta) {
       var options = game.ugly_moves();
-      if (depth === 0 || options.length === 0)
-        return boardScore('b', game);
-
+      if (depth <= 0 || options.length === 0)
+        return boardScore('b', game, depth);
       var bestMin = 99999;
       for (var i = 0; i < options.length; i ++)
       {
@@ -202,8 +214,8 @@
 
     var maxAI = function(depth, alpha, beta) {
       var options = game.ugly_moves();
-      if (depth === 0 || options.length === 0)
-        return boardScore('b', game);
+      if (depth <= 0 || options.length === 0)
+        return boardScore('b', game, depth);
       var bestMax = -99999;
       for (var i = 0; i < options.length; i ++)
       {
@@ -224,7 +236,8 @@
 
     var bestAI = function() {
       var options = game.ugly_moves();
-      if (!options.length) return; 
+      if (!options.length) return;
+      orderMoves(options);
       var bestScore = -99999;
       var moveIndex = -1;
       var alpha = -99999;
@@ -246,7 +259,7 @@
       game.ugly_move(options[moveIndex]);
       board.position(game.fen()); 
       if (game.in_checkmate())
-        window.setTimeout(alert("checkmate!"), 250);
+        window.setTimeout(alert("Checkmate!"), 250);
     }
 
 
@@ -265,19 +278,17 @@
     // now that we have moved in game.move, let's update our position on the snap end
     var onSnapEnd = function() {
       board.position(game.fen());
-      // make random legal move for black
-      //window.setTimeout(bestAI, 250);
+      window.setTimeout(bestAI, 250);
     };
 
     var cfg = {
       draggable: true,
-      position: '7r/ppp1k1rp/8/8/7K/4qb2/8/8 w - -',
+      position: 'start',
       onDragStart: onDragStart,
       onDrop: onDrop,
       onSnapEnd: onSnapEnd
     };
     board = ChessBoard('board', cfg);
-    game.load('7r/ppp1k1rp/8/8/7K/4qb2/8/8 w - - 1 45');
     </script>
   </body>
 </html>

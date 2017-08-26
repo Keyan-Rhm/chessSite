@@ -462,7 +462,8 @@ var Chess = function(fen) {
             from: from,
             to: to,
             flags: flags,
-            piece: board[from].type
+            piece: board[from].type,
+            score: null
         };
 
         if (promotion) {
