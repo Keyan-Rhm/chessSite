@@ -14,7 +14,7 @@
 
     var maxDepth = 4;
 
-    var scoreDict = [];
+    var minimaxDict = [];
 
     var pawnGridWhite = 
     [
@@ -123,16 +123,17 @@
       }
     };
 
-    var orderMoves = function(options) {
+    var orderMoves = function(options, depth, isMaximizing) {
       if (options.length <= 1) return;
       for (var i = 0; i < options.length; i ++)
       {
         game.ugly_move(options[i]);
-        options[i].score = boardScore('b', game, maxDepth - 1);//
+        options[i].score = boardScore('b', game, depth - 1);//
         game.undo();
       }
+      
       options.sort(function(a, b) {
-          return b.score - a.score;
+          return (isMaximizing ? b.score - a.score : a.score - b.score);
       });
     }
 
@@ -153,8 +154,6 @@
     }
 
     var boardScore = function(player, game, depth) {
-      if (scoreDict[game.fen() + ' [' + player + ']'])
-        return scoreDict(game.fen() + ' [' + player + ']');
       if (game.turn() === player && game.in_checkmate())
         return -99999 + (maxDepth - depth) * 10;
       else if (game.turn() !== player && game.in_checkmate())
@@ -177,21 +176,15 @@
           }
         }
       }
-      var posScoreWhite = scoreWhite - scoreBlack;
-      scoreDict.push({
-          key:   game.fen() + ' [w]',
-          value: posScoreWhite
-      });
-      var posScoreBlack = scoreBlack - scoreWhite;
-      scoreDict.push({
-          key:   game.fen() + ' [b]',
-          value: posScoreBlack
-      });
-      return (player === 'w' ? posScoreWhite : posScoreBlack);
+      return (player === 'w' ? scoreWhite - scoreBlack : scoreBlack - scoreWhite);
     } 
 
     var minAI = function(depth, alpha, beta) {
+      if (minimaxDict[game.fen() + ' [ ' + depth + ' minimizing ]'])
+        return minimaxDict[game.fen() + ' [ ' + depth + ' minimizing ]'];
       var options = game.ugly_moves();
+      if (maxDepth - 1 === depth) //only perform move ordering on "shallow" iteration
+        orderMoves(options, depth, false);
       if (depth <= 0 || options.length === 0)
         return boardScore('b', game, depth);
       var bestMin = 99999;
@@ -209,10 +202,13 @@
         if (beta <= alpha)
           break;
       }
+      minimaxDict[game.fen() + ' [ ' + depth + ' minimizing ]'] = bestMin;
       return bestMin;
     }
 
     var maxAI = function(depth, alpha, beta) {
+      if (minimaxDict[game.fen() + ' [ ' + depth + ' maximizing ]'])
+        return minimaxDict[game.fen() + ' [ ' + depth + ' maximizing ]'];
       var options = game.ugly_moves();
       if (depth <= 0 || options.length === 0)
         return boardScore('b', game, depth);
@@ -231,13 +227,14 @@
         if (beta <= alpha)
           break;
       }
+      minimaxDict[game.fen() + ' [ ' + depth + ' maximizing ]'] = bestMax;
       return bestMax;
     }
 
     var bestAI = function() {
       var options = game.ugly_moves();
       if (!options.length) return;
-      orderMoves(options);
+      orderMoves(options, maxDepth, true);
       var bestScore = -99999;
       var moveIndex = -1;
       var alpha = -99999;
@@ -260,6 +257,14 @@
       board.position(game.fen()); 
       if (game.in_checkmate())
         window.setTimeout(alert("Checkmate!"), 250);
+      else if (game.in_draw())
+        window.setTimeout(alert("Draw!"), 250);
+      else if (game.in_stalemate())
+        window.setTimeout(alert("Stalemate!"), 250);
+      else if (game.in_threefold_repetition())
+        window.setTimeout(alert("Threefold repetition!"), 250);
+      else if (game.insufficient_material())
+        window.setTimeout(alert("Draw by insufficient material!"), 250);
     }
 
 
