@@ -3,284 +3,252 @@
   <head>
     <title>Chess</title>
     <link rel="stylesheet" href="css/chessboard-0.3.0.min.css">
-    <script src="https://code.jquery.com/jquery-1.12.4.min.js"></script>
     <script src="js/chessboard-0.3.0.min.js"></script>
-    <script src="js/jquery.js"></script>
+    <script src="js/jquery-3.2.1.min.js"></script>
     <script src="js/chess.js"></script>
   </head>
   <body>
-    <div id="startBtn">Next move</div>
     <div id="board" class="triggered" style="width: 400px"></div>
     <script>
     var board, game = new Chess();
 
-    window.pawnGrid = 
-    [
-      [ 0,  0,  0,  0,  0,  0,  0,  0],
-      [50, 50, 50, 50, 50, 50, 50, 50],
-      [10, 10, 20, 30, 30, 20, 10, 10],
-      [ 5,  5, 10, 25, 25, 10,  5,  5],
-      [ 0,  0,  0, 20, 20,  0,  0,  0],
-      [ 5, -5,-10,  0,  0,-10, -5,  5],
-      [ 5, 10, 10,-20,-20, 10, 10,  5],
-      [ 0,  0,  0,  0,  0,  0,  0,  0]
-    ]
+    var maxDepth = 4;
 
-    window.knightGrid = 
-    [
-      [-50,-40,-30,-30,-30,-30,-40,-50],
-      [-40,-20,  0,  0,  0,  0,-20,-40],
-      [-30,  0, 10, 15, 15, 10,  0,-30],
-      [-30,  5, 15, 20, 20, 15,  5,-30],
-      [-30,  0, 15, 20, 20, 15,  0,-30],
-      [-30,  5, 10, 15, 15, 10,  5,-30],
-      [-40,-20,  0,  5,  5,  0,-20,-40],
-      [-50,-40,-30,-30,-30,-30,-40,-50]
-    ];
+    var scoreDict = [];
 
-    window.bishopGrid = 
-    [
-      [-20,-10,-10,-10,-10,-10,-10,-20],
-      [-10,  0,  0,  0,  0,  0,  0,-10],
-      [-10,  0,  5, 10, 10,  5,  0,-10],
-      [-10,  5,  5, 10, 10,  5,  5,-10],
-      [-10,  0, 10, 10, 10, 10,  0,-10],
-      [-10, 10, 10, 10, 10, 10, 10,-10],
-      [-10,  5,  0,  0,  0,  0,  5,-10],
-      [-20,-10,-10,-10,-10,-10,-10,-20]
-    ];
+      var pawnGridWhite = 
+      [
+        [ 0,  0,  0,  0,  0,  0,  0,  0],
+        [50, 50, 50, 50, 50, 50, 50, 50],
+        [10, 10, 20, 30, 30, 20, 10, 10],
+        [ 5,  5, 10, 25, 25, 10,  5,  5],
+        [ 0,  0,  0, 20, 20,  0,  0,  0],
+        [ 5, -5,-10,  0,  0,-10, -5,  5],
+        [ 5, 10, 10,-20,-20, 10, 10,  5],
+        [ 0,  0,  0,  0,  0,  0,  0,  0]
+      ]
 
-    window.rookGrid =
-    [
-      [ 0,  0,  0,  0,  0,  0,  0,  0],
-      [ 5, 10, 10, 10, 10, 10, 10,  5],
-      [-5,  0,  0,  0,  0,  0,  0, -5],
-      [-5,  0,  0,  0,  0,  0,  0, -5],
-      [-5,  0,  0,  0,  0,  0,  0, -5],
-      [-5,  0,  0,  0,  0,  0,  0, -5],
-      [-5,  0,  0,  0,  0,  0,  0, -5],
-      [ 0,  0,  0,  5,  5,  0,  0,  0]
-    ];
+      var pawnGridBlack = pawnGridWhite.reverse();
 
-    window.queenGrid = 
-    [
-      [-20,-10,-10, -5, -5,-10,-10,-20],
-      [-10,  0,  0,  0,  0,  0,  0,-10],
-      [-10,  0,  5,  5,  5,  5,  0,-10],
-      [ -5,  0,  5,  5,  5,  5,  0, -5],
-      [  0,  0,  5,  5,  5,  5,  0, -5],
-      [-10,  5,  5,  5,  5,  5,  0,-10],
-      [-10,  0,  5,  0,  0,  0,  0,-10],
-      [-20,-10,-10, -5, -5,-10,-10,-20]
-    ];
+      var knightGridWhite = 
+      [
+        [-50,-40,-30,-30,-30,-30,-40,-50],
+        [-40,-20,  0,  0,  0,  0,-20,-40],
+        [-30,  0, 10, 15, 15, 10,  0,-30],
+        [-30,  5, 15, 20, 20, 15,  5,-30],
+        [-30,  0, 15, 20, 20, 15,  0,-30],
+        [-30,  5, 10, 15, 15, 10,  5,-30],
+        [-40,-20,  0,  5,  5,  0,-20,-40],
+        [-50,-40,-30,-30,-30,-30,-40,-50]
+      ];
 
-    var kingGridStart = 
-    [
-      [-30,-40,-40,-50,-50,-40,-40,-30],
-      [-30,-40,-40,-50,-50,-40,-40,-30],
-      [-30,-40,-40,-50,-50,-40,-40,-30],
-      [-30,-40,-40,-50,-50,-40,-40,-30],
-      [-20,-30,-30,-40,-40,-30,-30,-20],
-      [-10,-20,-20,-20,-20,-20,-20,-10],
-      [ 20, 20,  0,  0,  0,  0, 20, 20],
-      [ 20, 30, 10,  0,  0, 10, 30, 20]
-    ];
+      var knightGridBlack = knightGridWhite.reverse();
 
-    window.kingGridEnd =
-    [
-      [-50,-40,-30,-20,-20,-30,-40,-50],
-      [-30,-20,-10,  0,  0,-10,-20,-30],
-      [-30,-10, 20, 30, 30, 20,-10,-30],
-      [-30,-10, 30, 40, 40, 30,-10,-30],
-      [-30,-10, 30, 40, 40, 30,-10,-30],
-      [-30,-10, 20, 30, 30, 20,-10,-30],
-      [-30,-30,  0,  0,  0,  0,-30,-30],
-      [-50,-30,-30,-30,-30,-30,-30,-50]
-    ];
+      var bishopGridWhite = 
+      [
+        [-20,-10,-10,-10,-10,-10,-10,-20],
+        [-10,  0,  0,  0,  0,  0,  0,-10],
+        [-10,  0,  5, 10, 10,  5,  0,-10],
+        [-10,  5,  5, 10, 10,  5,  5,-10],
+        [-10,  0, 10, 10, 10, 10,  0,-10],
+        [-10, 10, 10, 10, 10, 10, 10,-10],
+        [-10,  5,  0,  0,  0,  0,  5,-10],
+        [-20,-10,-10,-10,-10,-10,-10,-20]
+      ];
+
+      var bishopGridBlack = bishopGridWhite.reverse();
+
+      var rookGridWhite =
+      [
+        [ 0,  0,  0,  0,  0,  0,  0,  0],
+        [ 5, 10, 10, 10, 10, 10, 10,  5],
+        [-5,  0,  0,  0,  0,  0,  0, -5],
+        [-5,  0,  0,  0,  0,  0,  0, -5],
+        [-5,  0,  0,  0,  0,  0,  0, -5],
+        [-5,  0,  0,  0,  0,  0,  0, -5],
+        [-5,  0,  0,  0,  0,  0,  0, -5],
+        [ 0,  0,  0,  5,  5,  0,  0,  0]
+      ];
+
+      var rookGridBlack = rookGridWhite.reverse();
+
+      var queenGridWhite = 
+      [
+        [-20,-10,-10, -5, -5,-10,-10,-20],
+        [-10,  0,  0,  0,  0,  0,  0,-10],
+        [-10,  0,  5,  5,  5,  5,  0,-10],
+        [ -5,  0,  5,  5,  5,  5,  0, -5],
+        [  0,  0,  5,  5,  5,  5,  0, -5],
+        [-10,  5,  5,  5,  5,  5,  0,-10],
+        [-10,  0,  5,  0,  0,  0,  0,-10],
+        [-20,-10,-10, -5, -5,-10,-10,-20]
+      ];
+
+      var queenGridBlack = queenGridWhite.reverse();
+
+      var kingGridWhiteStart = 
+      [
+        [-30,-40,-40,-50,-50,-40,-40,-30],
+        [-30,-40,-40,-50,-50,-40,-40,-30],
+        [-30,-40,-40,-50,-50,-40,-40,-30],
+        [-30,-40,-40,-50,-50,-40,-40,-30],
+        [-20,-30,-30,-40,-40,-30,-30,-20],
+        [-10,-20,-20,-20,-20,-20,-20,-10],
+        [ 20, 20,  0,  0,  0,  0, 20, 20],
+        [ 20, 30, 10,  0,  0, 10, 30, 20]
+      ];
+
+      var kingGridBlackStart = kingGridWhiteStart.reverse();
+
+      var kingGridWhiteEnd =
+      [
+        [-50,-40,-30,-20,-20,-30,-40,-50],
+        [-30,-20,-10,  0,  0,-10,-20,-30],
+        [-30,-10, 20, 30, 30, 20,-10,-30],
+        [-30,-10, 30, 40, 40, 30,-10,-30],
+        [-30,-10, 30, 40, 40, 30,-10,-30],
+        [-30,-10, 20, 30, 30, 20,-10,-30],
+        [-30,-30,  0,  0,  0,  0,-30,-30],
+        [-50,-30,-30,-30,-30,-30,-30,-50]
+      ];
+
+      var kingGridBlackEnd = kingGridWhiteEnd.reverse();
 
     // do not pick up pieces if the game is over
     // only pick up pieces for White
     var onDragStart = function(source, piece, position, orientation) {
-      if (game.in_checkmate() === true || game.in_draw() === true ||
-        piece.search(/^b/) !== -1) {
+      if (game.in_checkmate() === true || game.in_draw() === true /*||
+        piece.search(/^b/) !== -1*/) {
         return false;
       }
     };
 
-    var value = function(piece, i, j, player)
+    var value = function(piece, player, i, j)
     {
-      if (piece === 'r') return (500 + bonusValue('r', player, i, j));
-      else if (piece === 'n') return (320 + bonusValue('n', player, i, j));
-      else if (piece === 'b') return (330 + bonusValue('b', player, i, j));
-      else if (piece === 'k') return (0 + bonusValue('k', player, i, j));
-      else if (piece === 'q') return (900 + bonusValue('q', player, i, j));
-      else if (piece === 'p') return (100 + bonusValue('p', player, i, j));
-    }
-
-    var bonusValue = function(piece, player, i, j) 
-    {
-      if (piece === 'r')
-      {
-        if (player === 'b')
-          return window.rookGrid[i][7-j];
-        else 
-          return window.rookGrid[i][j];
-      }
-      else if (piece === 'n')
-      {
-        if (player === 'b')
-          return window.knightGrid[i][7-j];
-        else 
-          return window.knightGrid[i][j];
-      }
-      else if (piece === 'k')
-      {
-        if (player === 'b')
-          return window.kingGridStart[i][7-j];
-        else 
-          return window.kingGridStart[i][j];
-        //TODO: add kingGridEnd as well, for endGame
-      }
-      else if (piece === 'b')
-      {
-        if (player === 'b')
-          return window.bishopGrid[i][7-j];
-        else 
-          return window.bishopGrid[i][j];
-      }
-      else if (piece === 'q')
-      {
-        if (player === 'b')
-          return window.queenGrid[i][7-j];
-        else 
-          return window.queenGrid[i][j];
-      }
-      else if (piece === 'p')
-      {
-        if (player === 'b')
-          return window.pawnGrid[i][7-j];
-        else 
-          return window.pawnGrid[i][j];
-      }
+      if (piece === 'r') return (500 + 
+        (player === 'w' ? rookGridWhite[i][j] : rookGridBlack[i][j]));
+      else if (piece === 'n') return (320 + 
+        (player === 'w' ? knightGridWhite[i][j] : knightGridBlack[i][j]));
+      else if (piece === 'b') return (330 + 
+        (player === 'w' ? bishopGridWhite[i][j] : bishopGridBlack[i][j]));
+      else if (piece === 'k') return (0 + 
+        (player === 'w' ? kingGridWhiteStart[i][j] : kingGridBlackStart[i][j]));
+      else if (piece === 'q') return (900 + 
+        (player === 'w' ? queenGridWhite[i][j] : queenGridBlack[i][j]));
+      else if (piece === 'p') return (100 + 
+        (player === 'w' ? pawnGridWhite[i][j] : pawnGridBlack[i][j]));
     }
 
     var boardScore = function(player, game) {
-      //something about checkmate
-      var score = 0;
+      if (scoreDict[game.fen() + ' [' + player + ']'])
+        return scoreDict(game.fen() + ' [' + player + ']');
+      if (game.turn() === player && game.in_checkmate())
+        return -99999;
+      else if (game.turn() !== player && game.in_checkmate())
+        return 99999;
+      var scoreWhite = 0;
+      var scoreBlack = 0;
       for (var i = 0; i < 8; i ++)
       {
         for (var j = 0; j < 8; j ++)
         {
-          if (game.board()[i][j] && game.board()[i][j]["color"] === player)
-            score += value(game.board()[i][j]["type"], player, i, j);
-          else if (game.board()[i][j] && game.board()[i][j]["color"] !== player)
-            score -= value(game.board()[i][j]["type"], player, i, j);
+          var square = game.board()[i][j]
+          if (square && square["color"] === 'w')
+            scoreWhite += value(square["type"], player, i, j);
+          else if (square && square["color"] !== 'w')
+            scoreBlack += value(square["type"], player, i, j);
+          if (scoreWhite <= 1100 || scoreBlack <= 1100)
+          {
+            kingGridWhiteStart = kingGridWhiteEnd;
+            kingGridBlackStart = kingGridBlackEnd;
+          }
         }
       }
-      return score;
-    }
+      var posScoreWhite = scoreWhite - scoreBlack;
+      scoreDict.push({
+          key:   game.fen() + ' [w]',
+          value: posScoreWhite
+      });
+      var posScoreBlack = scoreBlack - scoreWhite;
+      scoreDict.push({
+          key:   game.fen() + ' [b]',
+          value: posScoreBlack
+      });
+      return (player === 'w' ? posScoreWhite : posScoreBlack);
+    } 
 
-    var minAI = function(depth) {
-      var options = game.moves();
-      if (depth === 0)
-      {
-        console.log("depth is 0 on min:");
-        console.log(boardScore('b', game));
+    var minAI = function(depth, alpha, beta) {
+      var options = game.ugly_moves();
+      if (depth === 0 || options.length === 0)
         return boardScore('b', game);
-      }
 
-      var bestMin = 9999999;
+      var bestMin = 99999;
       for (var i = 0; i < options.length; i ++)
       {
-        game.move(options[i]);
-        bestMin = Math.min(bestMin, maxAI(depth - 1));
+        game.ugly_move(options[i]);
+        if (game.in_threefold_repetition())
+        {
+          game.undo();
+          continue;
+        }
+        bestMin = Math.min(bestMin, maxAI(depth - 1, alpha, beta));
+        beta = Math.min(beta, bestMin);
         game.undo();
-
+        if (beta <= alpha)
+          break;
       }
       return bestMin;
     }
 
-    var maxAI = function(depth) {
-      var options = game.moves();
-      if (depth === 0)
-      {
-        console.log("depth is 0 on max:");
-        console.log(boardScore('b', game));
+    var maxAI = function(depth, alpha, beta) {
+      var options = game.ugly_moves();
+      if (depth === 0 || options.length === 0)
         return boardScore('b', game);
-      }
-
-      var bestMax = -9999999;
+      var bestMax = -99999;
       for (var i = 0; i < options.length; i ++)
       {
-        game.move(options[i]);
-        bestMax = Math.max(bestMax, minAI(depth - 1));
+        game.ugly_move(options[i]);
+        if (game.in_threefold_repetition())
+        {
+          game.undo();
+          continue;
+        }
+        bestMax = Math.max(bestMax, minAI(depth - 1, alpha, beta));
+        alpha = Math.max(alpha, bestMax);
         game.undo();
-
+        if (beta <= alpha)
+          break;
       }
       return bestMax;
     }
 
     var bestAI = function() {
-      var options = game.moves();
+      var options = game.ugly_moves();
       if (!options.length) return; 
-      var startScore = boardScore ('b', game);
-      var bestScore = startScore;
+      var bestScore = -99999;
       var moveIndex = -1;
+      var alpha = -99999;
+      var beta = 99999;
       for (i = 0; i < options.length; i++)
       {
-        game.move(options[i]);
-        var moveScore = minAI(5);
+        game.ugly_move(options[i]);
+        var moveScore = minAI(maxDepth - 1, alpha, beta);
         if (moveScore > bestScore)
         {
           moveIndex = i;
           bestScore = moveScore;
+          alpha = Math.max(alpha, bestScore);
         };
         game.undo();
+        if (beta <= alpha)
+          break;
       }
-      if (bestScore > startScore)
-      {
-        game.move(options[moveIndex]);
-        board.position(game.fen()); 
-      }
-      else
-        randomAI();
+      game.ugly_move(options[moveIndex]);
+      board.position(game.fen()); 
+      if (game.in_checkmate())
+        window.setTimeout(alert("checkmate!"), 250);
     }
 
-    var betterAI = function() {
-      var options = game.moves();
-      if (!options.length) return; 
-      var startScore = boardScore ('b', game);
-      var bestScore = startScore;
-      var moveIndex = -1;
-      for (i = 0; i < options.length; i++)
-      {
-        game.move(options[i]);
-        if (boardScore('b', game) > bestScore)
-        {
-          moveIndex = i;
-          bestScore = boardScore('b', game);
-        };
-        game.undo();
-      }
-      if (bestScore > startScore)
-      {
-        game.move(options[moveIndex]);
-        board.position(game.fen()); 
-      }
-      else
-        randomAI();
-    }
-
-    var randomAI = function() {
-      var options = game.moves();
-
-      // game over
-      if (!options.length) return;
-
-      var random = Math.floor(Math.random() * options.length);
-      game.move(options[random]); //make move
-      board.position(game.fen()); //update position
-    };
 
     var onDrop = function(source, target) {
       // see if the move is legal
@@ -292,24 +260,24 @@
 
       // illegal move
       if (move === null) return 'snapback';
-
-      // make random legal move for black
-      window.setTimeout(bestAI(), 250);
     };
 
     // now that we have moved in game.move, let's update our position on the snap end
     var onSnapEnd = function() {
       board.position(game.fen());
+      // make random legal move for black
+      //window.setTimeout(bestAI, 250);
     };
 
     var cfg = {
       draggable: true,
-      position: 'start',
+      position: '7r/ppp1k1rp/8/8/7K/4qb2/8/8 w - -',
       onDragStart: onDragStart,
       onDrop: onDrop,
       onSnapEnd: onSnapEnd
     };
     board = ChessBoard('board', cfg);
+    game.load('7r/ppp1k1rp/8/8/7K/4qb2/8/8 w - - 1 45');
     </script>
   </body>
 </html>
