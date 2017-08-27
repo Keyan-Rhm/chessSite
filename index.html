@@ -128,7 +128,7 @@
       for (var i = 0; i < options.length; i ++)
       {
         game.ugly_move(options[i]);
-        options[i].score = boardScore('b', game, depth - 1);//
+        options[i].score = boardScore('b', game, depth - 1);
         game.undo();
       }
       
@@ -183,10 +183,10 @@
       if (minimaxDict[game.fen() + ' [ ' + depth + ' minimizing ]'])
         return minimaxDict[game.fen() + ' [ ' + depth + ' minimizing ]'];
       var options = game.ugly_moves();
-      if (maxDepth - 1 === depth) //only perform move ordering on "shallow" iteration
-        orderMoves(options, depth, false);
       if (depth <= 0 || options.length === 0)
         return boardScore('b', game, depth);
+      if (maxDepth - 1 === depth) //only perform move ordering on "shallow" iteration
+        orderMoves(options, depth, false);
       var bestMin = 99999;
       for (var i = 0; i < options.length; i ++)
       {
