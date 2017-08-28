@@ -63,7 +63,7 @@
           }
         }
       }
-      return valueHi.toString() + valueLo.toString();
+      return valueHi + valueLo;
     }
 
     var maxDepth = 4;
@@ -211,7 +211,7 @@
     }
 
     var boardScore = function(player, game, depth) {
-      var boardKey = zobristKey(game);
+      var boardKey = game.fen().split(" ")[0];
       if (player === 'w')
         pastScore = whiteScoreDict[boardKey];
       else 
@@ -250,9 +250,9 @@
     } 
 
     var minAI = function(depth, alpha, beta) {
-      var hashKey = zobristKey(game) + depth.toString();
-      if (miniScoreDict[hashKey])
-        return miniScoreDict[hashKey];
+      var hashKeyStart = game.fen().split(" ")[0];
+      if (miniScoreDict[hashKeyStart + ' [ ' + depth + ' ] '])
+        return miniScoreDict[hashKeyStart + ' [ ' + depth + ' ] '];
       var options = game.ugly_moves();
       if (depth <= 0 || options.length === 0)
         return boardScore(AIcolor, game, depth);
@@ -273,14 +273,14 @@
         if (beta <= alpha)
           break;
       }
-      miniScoreDict[hashKey] = bestMin;
+      miniScoreDict[hashKeyStart + ' [ ' + depth + ' ] '] = bestMin;
       return bestMin;
     }
 
     var maxAI = function(depth, alpha, beta) {
-      var hashKey = zobristKey(game) + depth.toString();
-      if (maxiScoreDict[hashKey])
-        return maxiScoreDict[hashKey];
+      var hashKeyStart = game.fen().split(" ")[0];
+      if (maxiScoreDict[hashKeyStart + ' [ ' + depth + ' ] '])
+        return maxiScoreDict[hashKeyStart + ' [ ' + depth + ' ] '];
       var options = game.ugly_moves();
       if (depth <= 0 || options.length === 0)
         return boardScore(AIcolor, game, depth);
@@ -299,7 +299,7 @@
         if (beta <= alpha)
           break;
       }
-      maxiScoreDict[hashKey] = bestMax;
+      maxiScoreDict[hashKeyStart + ' [ ' + depth + ' ] '] = bestMax;
       return bestMax;
     }
 
