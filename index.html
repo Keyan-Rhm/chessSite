@@ -12,6 +12,9 @@
     <script>
     var board, game = new Chess();
 
+    var colors = ['w', 'b'];
+    var AIcolor = colors[Math.floor(Math.random() * 2)];
+
     var zobrist = new Uint32Array(13 * 2 * 64 * 2); // pieces * colors * fields * 64/32
     for (var i=0; i<zobrist.length; i++)
         zobrist[i] = Math.random() * 4294967296;
@@ -182,7 +185,7 @@
       for (var i = 0; i < options.length; i ++)
       {
         game.ugly_move(options[i]);
-        options[i].score = boardScore('b', game, depth - 1);
+        options[i].score = boardScore(AIcolor, game, depth - 1);
         game.undo();
       }
       
@@ -250,7 +253,7 @@
         return miniScoreDict[hashKeyStart + ' [ ' + depth + ' ]'];
       var options = game.ugly_moves();
       if (depth <= 0 || options.length === 0)
-        return boardScore('b', game, depth);
+        return boardScore(AIcolor, game, depth);
       if (maxDepth - 1 === depth) //only perform move ordering on "shallow" iteration
         orderMoves(options, depth, false);
       var bestMin = 99999;
@@ -278,7 +281,7 @@
         return maxiScoreDict[hashKeyStart + ' [ ' + depth + ' ]'];
       var options = game.ugly_moves();
       if (depth <= 0 || options.length === 0)
-        return boardScore('b', game, depth);
+        return boardScore(AIcolor, game, depth);
       var bestMax = -99999;
       for (var i = 0; i < options.length; i ++)
       {
@@ -360,7 +363,11 @@
       onDrop: onDrop,
       onSnapEnd: onSnapEnd
     };
+    if (AIcolor === 'w')
+      cfg["orientation"] = "black";
     board = ChessBoard('board', cfg);
+    if (AIcolor === 'w')
+      window.setTimeout(bestAI, 250);
     </script>
   </body>
 </html>
