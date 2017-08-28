@@ -175,7 +175,7 @@
     // only pick up pieces for White
     var onDragStart = function(source, piece, position, orientation) {
       if (game.in_checkmate() === true || game.in_draw() === true ||
-        piece.search(/^b/) !== -1) {
+        (AIcolor === 'b' && piece.search(/^b/) !== -1) || (AIcolor === 'w' && piece.search(/^w/) !== -1)) {
         return false;
       }
     };
