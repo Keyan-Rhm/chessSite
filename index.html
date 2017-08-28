@@ -70,8 +70,7 @@
 
     var miniScoreDict = {};
     var maxiScoreDict = {};
-    var whiteScoreDict = {};
-    var blackScoreDict = {};
+    var scoreDict = {};
 
     var pawnGridWhite = 
     [
@@ -212,12 +211,8 @@
 
     var boardScore = function(player, game, depth) {
       var boardKey = zobristKey(game);
-      if (player === 'w')
-        pastScore = whiteScoreDict[boardKey];
-      else 
-        pastScore = blackScoreDict[boardKey];
-      if (pastScore)
-        return pastScore;
+      if (scoreDict[boardKey])
+        return (player === 'w' ? scoreDict[boardKey] : - scoreDict[boardKey]);
       if (game.turn() === player && game.in_checkmate())
         return -99999 + (maxDepth - depth) * 10;
       else if (game.turn() !== player && game.in_checkmate())
@@ -241,18 +236,15 @@
         }
       }
       whiteScore = scoreWhite - scoreBlack;
-      blackScore = scoreBlack - scoreWhite;
-      // console.log(scoreWhite);
-      // console.log(scoreBlack);
-      whiteScoreDict[boardKey] = whiteScore;
-      blackScoreDict[boardKey] = blackScore;
-      return (player === 'w' ? whiteScore : blackScore);
+      scoreDict[boardKey] = whiteScore; //lets have our score dict only memorize the white scores
+      //black scores are just negatives of this value
+      return (player === 'w' ? whiteScore : -whiteScore);
     } 
 
     var minAI = function(depth, alpha, beta) {
-      var hashKeyStart = zobristKey(game);
-      if (miniScoreDict[hashKeyStart + ' [ ' + depth + ' ]'])
-        return miniScoreDict[hashKeyStart + ' [ ' + depth + ' ]'];
+      var hashKey = zobristKey(game) + (depth + 5) * 128;
+      if (miniScoreDict[hashKey])
+        return miniScoreDict[hashKey];
       var options = game.ugly_moves();
       if (depth <= 0 || options.length === 0)
         return boardScore(AIcolor, game, depth);
@@ -273,14 +265,14 @@
         if (beta <= alpha)
           break;
       }
-      miniScoreDict[hashKeyStart + ' [ ' + depth + ' ]'] = bestMin;
+      miniScoreDict[hashKey] = bestMin;
       return bestMin;
     }
 
     var maxAI = function(depth, alpha, beta) {
-      var hashKeyStart = zobristKey(game);
-      if (maxiScoreDict[hashKeyStart + ' [ ' + depth + ' ]'])
-        return maxiScoreDict[hashKeyStart + ' [ ' + depth + ' ]'];
+      var hashKey = zobristKey(game) + (depth + 5) * 128;
+      if (maxiScoreDict[hashKey])
+        return maxiScoreDict[hashKey];
       var options = game.ugly_moves();
       if (depth <= 0 || options.length === 0)
         return boardScore(AIcolor, game, depth);
@@ -299,7 +291,7 @@
         if (beta <= alpha)
           break;
       }
-      maxiScoreDict[hashKeyStart + ' [ ' + depth + ' ]'] = bestMax;
+      maxiScoreDict[hashKey] = bestMax;
       return bestMax;
     }
 
