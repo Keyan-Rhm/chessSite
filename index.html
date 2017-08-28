@@ -12,9 +12,63 @@
     <script>
     var board, game = new Chess();
 
+    var zobrist = new Uint32Array(13 * 2 * 64 * 2); // pieces * colors * fields * 64/32
+    for (var i=0; i<zobrist.length; i++)
+        zobrist[i] = Math.random() * 4294967296;
+
+    var pieceValue = {
+      'r': 0,
+      'n': 1,
+      'b': 2,
+      'k': 3,
+      'q': 4,
+      'p': 5
+    }
+
+    var positionVal = [
+      [0, 1, 2, 3, 4, 5, 6, 7],
+      [8, 9, 10, 11, 12, 13, 14, 15],
+      [16, 17, 18, 19, 20, 21, 22, 23],
+      [24, 25, 26, 27, 28, 29, 30, 31],
+      [32, 33, 34, 35, 36, 37, 38, 39],
+      [40, 41, 42, 43, 44, 45, 46, 47],
+      [48, 49, 50, 51, 52, 53, 54, 55],
+      [56, 57, 58, 59, 60, 61, 62, 63]
+    ]
+
+    var zobristVal = function(piece, i, j) {
+      var pieceVal = pieceValue[piece.type];
+      var posVal = positionVal[i][j];
+      hi = zobrist[pieceVal * 128 + (piece.color === 'w' ? 0 : 1) * 64 + posVal];
+      lo = zobrist[pieceVal * 128 + (piece.color === 'w' ? 0 : 1) * 64 + posVal + 1];
+      return [hi, lo];
+    }
+
+    var zobristKey = function(game) {
+      var board = game.board();
+      var valueHi = 0;
+      var valueLo = 0;
+      for (var i = 0; i < 8; i ++)
+      {
+        for (var j = 0; j < 8; j ++)
+        {
+          if (board[i][j])
+          {
+            zobristArr = zobristVal(board[i][j], i, j);
+            valueHi = valueHi^zobristArr[0];
+            valueLo = valueLo^zobristArr[1];
+          }
+        }
+      }
+      return valueHi + valueLo;
+    }
+
     var maxDepth = 4;
 
-    var minimaxDict = [];
+    var miniScoreDict = {};
+    var maxiScoreDict = {};
+    var whiteScoreDict = {};
+    var blackScoreDict = {};
 
     var pawnGridWhite = 
     [
@@ -154,6 +208,13 @@
     }
 
     var boardScore = function(player, game, depth) {
+      var boardKey = zobristKey(game);
+      if (player === 'w')
+        pastScore = whiteScoreDict[boardKey];
+      else 
+        pastScore = blackScoreDict[boardKey];
+      if (pastScore)
+        return pastScore;
       if (game.turn() === player && game.in_checkmate())
         return -99999 + (maxDepth - depth) * 10;
       else if (game.turn() !== player && game.in_checkmate())
@@ -176,12 +237,17 @@
           }
         }
       }
-      return (player === 'w' ? scoreWhite - scoreBlack : scoreBlack - scoreWhite);
+      whiteScore = scoreWhite - scoreBlack;
+      blackScore = scoreBlack - scoreWhite;
+      whiteScoreDict[boardKey] = whiteScore;
+      blackScoreDict[boardKey] = blackScore;
+      return (player === 'w' ? whiteScore : blackScore);
     } 
 
     var minAI = function(depth, alpha, beta) {
-      if (minimaxDict[game.fen() + ' [ ' + depth + ' minimizing ]'])
-        return minimaxDict[game.fen() + ' [ ' + depth + ' minimizing ]'];
+      var hashKeyStart = zobristKey(game);
+      if (miniScoreDict[hashKeyStart + ' [ ' + depth + ' ]'])
+        return miniScoreDict[hashKeyStart + ' [ ' + depth + ' ]'];
       var options = game.ugly_moves();
       if (depth <= 0 || options.length === 0)
         return boardScore('b', game, depth);
@@ -202,13 +268,14 @@
         if (beta <= alpha)
           break;
       }
-      minimaxDict[game.fen() + ' [ ' + depth + ' minimizing ]'] = bestMin;
+      miniScoreDict[hashKeyStart + ' [ ' + depth + ' ]'] = bestMin;
       return bestMin;
     }
 
     var maxAI = function(depth, alpha, beta) {
-      if (minimaxDict[game.fen() + ' [ ' + depth + ' maximizing ]'])
-        return minimaxDict[game.fen() + ' [ ' + depth + ' maximizing ]'];
+      var hashKeyStart = zobristKey(game);
+      if (maxiScoreDict[hashKeyStart + ' [ ' + depth + ' ]'])
+        return maxiScoreDict[hashKeyStart + ' [ ' + depth + ' ]'];
       var options = game.ugly_moves();
       if (depth <= 0 || options.length === 0)
         return boardScore('b', game, depth);
@@ -227,7 +294,7 @@
         if (beta <= alpha)
           break;
       }
-      minimaxDict[game.fen() + ' [ ' + depth + ' maximizing ]'] = bestMax;
+      maxiScoreDict[hashKeyStart + ' [ ' + depth + ' ]'] = bestMax;
       return bestMax;
     }
 
