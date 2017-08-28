@@ -233,7 +233,7 @@
             scoreWhite += value(square["type"], player, i, j);
           else if (square && square["color"] !== 'w')
             scoreBlack += value(square["type"], player, i, j);
-          if (scoreWhite <= 1100 || scoreBlack <= 1100)
+          if (depth === - 1 && (scoreWhite <= 1100 || scoreBlack <= 1100)) // sentinel depth to update kingGridTables
           {
             kingGridWhiteStart = kingGridWhiteEnd;
             kingGridBlackStart = kingGridBlackEnd;
@@ -242,6 +242,8 @@
       }
       whiteScore = scoreWhite - scoreBlack;
       blackScore = scoreBlack - scoreWhite;
+      // console.log(scoreWhite);
+      // console.log(scoreBlack);
       whiteScoreDict[boardKey] = whiteScore;
       blackScoreDict[boardKey] = blackScore;
       return (player === 'w' ? whiteScore : blackScore);
@@ -324,6 +326,7 @@
           break;
       }
       game.ugly_move(options[moveIndex]);
+      boardScore(AIcolor, game, -1);//update king scoreboard if required, -1 is sentinel to do so
       board.position(game.fen()); 
       if (game.in_checkmate())
         window.setTimeout(alert("Checkmate!"), 250);
