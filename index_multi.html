@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>Chess</title>
+    <link rel="stylesheet" href="css/chessboard-0.3.0.min.css">
+    <script src="js/chessboard-0.3.0.min.js"></script>
+    <script src="js/jquery-3.2.1.min.js"></script>
+    <script src="js/chess.js"></script>
+    <script src="/socket.io/socket.io.js"></script>
+  </head>
+  
+  <body>
+    <div id="board" class="triggered" style="width: 400px"></div>
+    <script>
+    var board, game = new Chess();
+    var socket = io();
+    var colors = ['w', 'b'];
+    var AIcolor = colors[Math.floor(Math.random() * 2)];
+
+    // do not pick up pieces if the game is over
+    // only pick up pieces for White
+    var onDragStart = function(source, piece, position, orientation) {
+      if (game.in_checkmate() === true || game.in_draw() === true ) {
+        return false;
+      }
+    };
+
+    var onDrop = function(source, target) {
+      // see if the move is legal
+      var move = game.move({
+        from: source,
+        to: target,
+        promotion: 'q' // NOTE: always promote to a queen for example simplicity
+      });
+
+      // illegal move
+      if (move === null) return 'snapback';
+    };
+
+    // now that we have moved in game.move, let's update our position on the snap end
+    var onSnapEnd = function() {
+      socket.emit('chess position', game.fen());
+    };
+
+    var cfg = {
+      draggable: true,
+      position: 'start',
+      onDragStart: onDragStart,
+      onDrop: onDrop,
+      onSnapEnd: onSnapEnd
+    };
+
+    $(function () {
+      socket.on('chess position', function(position) {
+        board.position(position);
+        game.load(position);
+      });
+    });
+    board = ChessBoard('board', cfg);
+    </script>
+  </body>
+</html>
