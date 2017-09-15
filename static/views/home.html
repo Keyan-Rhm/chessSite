@@ -1,0 +1,104 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>ChessPro</title>
+    <script src="js/jquery-3.2.1.min.js"></script>
+  </head>
+  <body>
+    <div id="background">
+      <img src="/img/king.png" id="kingContainer">
+      <h1 class="helvetica">Welcome to ChessPro!</h1>
+      <div id="buttonDiv">
+        <a onclick="redirectToFriend()"><h2 class="helvetica btn-custom" id="playFriend">Play a Friend</h2></a>
+        <a onclick="redirectToAI()"><h2 class="helvetica btn-custom" id="playAI">Play the AI</h2></a>
+      </div>
+    </div>
+  </body>
+
+</html>
+<script>
+    var chosenPlayer = 'w';
+
+    changePic = (function() {
+        if (document.getElementById("kingContainer").src == "http://localhost:3000/img/king.png") 
+        {
+            chosenPlayer = 'b';
+            document.getElementById("kingContainer").src = "http://localhost:3000/img/king2.png";
+        }
+        else 
+        {
+            chosenPlayer = 'w';
+            document.getElementById("kingContainer").src = "http://localhost:3000/img/king.png";
+        }
+    }); 
+    document.getElementById("kingContainer").addEventListener("click", changePic);
+
+    redirectToAI = (function() {
+      window.location.href="/playAI?player="+chosenPlayer;
+    });
+
+    redirectToFriend = (function () {
+        
+    });
+</script>
+
+<style>
+.helvetica {
+  font-family: Arial, Helvetica, sans-serif;
+  text-align: center;
+}
+h1 {
+  font-size: 250%;
+}
+h2 {
+  font-size: 200%;
+}
+
+a {
+  color:inherit;
+  text-decoration: none;
+}
+
+#buttonDiv {
+  display: inline-block;
+  margin-left: 400px;
+}
+
+#playFriend {
+  margin-right: 80px;
+}
+#background {
+  width: 100%;
+  height: 100%;
+  position: absolute;
+  top: 0px;
+  left: 0px;
+  z-index: 0;
+  background-color: #00ccff;
+}
+
+#kingContainer {
+  display: block;
+  margin: auto;
+  height: 60%;
+  z-index: 1;
+}
+
+.btn-custom {
+  display: inline-block;
+  border-radius: 25px;
+  padding: 10px;
+  background-color: #08c;
+  border-color: #08c;
+}
+.btn-custom:hover,
+.btn-custom:focus,
+.btn-custom:active,
+.btn-custom.active {
+  background-color: yellow;
+  border-color: #006699;
+}
+
+
+
+</style>

@@ -1,0 +1,417 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>Chess</title>
+    <link rel="stylesheet" href="css/chessboard-0.3.0.min.css">
+    <script src="js/chessboard-0.3.0.min.js"></script>
+    <script src="js/jquery-3.2.1.min.js"></script>
+    <script src="js/chess.js"></script>
+  </head>
+  <body>
+    <div id="board" class="triggered" style="width: 400px"></div>
+    <%= myTinyURL %>
+    <script>
+    var memes = '<%-myTinyURL%>';
+    var player = '<%-player%>';
+    console.log(memes);
+    var board, game = new Chess();
+
+    var colors = ['w', 'b'];
+    var AIcolor = colors[Math.floor(Math.random() * 2)];
+    if (player==='b')
+      AIcolor = 'w';
+    else if (player === 'w')
+      AIcolor = 'b';
+
+    var zobrist = new Uint32Array(13 * 2 * 64 * 2); // pieces * colors * fields * 64/32
+    for (var i=0; i<zobrist.length; i++)
+        zobrist[i] = Math.random() * 4294967296;
+
+    var pieceValue = {
+      'r': 1,
+      'n': 2,
+      'b': 3,
+      'k': 4,
+      'q': 5,
+      'p': 6,
+
+    }
+
+    var positionVal = [
+      [0, 1, 2, 3, 4, 5, 6, 7],
+      [8, 9, 10, 11, 12, 13, 14, 15],
+      [16, 17, 18, 19, 20, 21, 22, 23],
+      [24, 25, 26, 27, 28, 29, 30, 31],
+      [32, 33, 34, 35, 36, 37, 38, 39],
+      [40, 41, 42, 43, 44, 45, 46, 47],
+      [48, 49, 50, 51, 52, 53, 54, 55],
+      [56, 57, 58, 59, 60, 61, 62, 63]
+    ]
+
+    var positionIndex = function(positionString) {
+      return [positionString[1] - "1", positionString[0].charCodeAt(0) - "a".charCodeAt(0)];
+    }
+
+    var zobristVal = function(piece, i, j) {
+      var pieceVal = (piece ? pieceValue[piece.type] : 0);
+      var posVal = positionVal[i][j];
+      hi = zobrist[pieceVal * 128 + (piece && piece.color === 'w' ? 0 : 1) * 64 + posVal];
+      lo = zobrist[pieceVal * 128 + (piece && piece.color === 'w' ? 0 : 1) * 64 + posVal + 1];
+      return [hi, lo];
+    }
+
+    // TODO: optimize zobrist hashing to not need for loop
+    // var zobristID = [0, 0];
+    // var startBoard = game.board()
+    // var valueHi = 0;
+    // var valueLo = 0;
+    // for (var i = 0; i < 8; i ++)
+    // {
+    //   for (var j = 0; j < 8; j ++)
+    //   {
+    //     zobristArr = zobristVal(startBoard[i][j], i, j);
+    //     valueHi = valueHi^zobristArr[0];
+    //     valueLo = valueLo^zobristArr[1];
+    //   }
+    // }
+    // zobristID = [valueHi, valueLo];
+
+    // var zobristMove = function(move) {
+    //   fromPosition = positionIndex(move.from);
+    //   toPosition = positionIndex(move.to);
+    //   console.log(move.piece);
+    //   console.log(game.board()[toPosition[0]][toPosition[1]]);
+    //   zobristPairFrom = zobristVal(move.piece, fromPosition[0], fromPosition[1]);
+    //   zobristPairTo = zobristVal(game.board()[toPosition[0]][toPosition[1]], toPosition[0], toPosition[1]);
+    //   zobristPairNew = zobristVal(move.piece, toPosition[0], toPosition[1]);
+    //   zobristID[0] = zobristID[0] ^ zobristPairFrom[0] ^ zobristPairTo[0] ^ zobristPairNew[0];
+    //   zobristID[1] = zobristID[1] ^ zobristPairFrom[1] ^ zobristPairTo[1] ^ zobristPairNew[1];
+    // }
+
+    var zobristKey = function(game) {
+      var board = game.board();
+      var valueHi = 0;
+      var valueLo = 0;
+      for (var i = 0; i < 8; i ++)
+      {
+        for (var j = 0; j < 8; j ++)
+        {
+          if (board[i][j])
+          {
+            zobristArr = zobristVal(board[i][j], i, j);
+            valueHi = valueHi^zobristArr[0];
+            valueLo = valueLo^zobristArr[1];
+          }
+        }
+      }
+      return valueHi.toString() + valueLo.toString();
+    }
+
+    var maxDepth = 4;
+
+    var miniScoreDict = {};
+    var maxiScoreDict = {};
+    var whiteScoreDict = {};
+    var blackScoreDict = {};
+
+    var pawnGridWhite = 
+    [
+      [ 0,  0,  0,  0,  0,  0,  0,  0],
+      [50, 50, 50, 50, 50, 50, 50, 50],
+      [10, 10, 20, 30, 30, 20, 10, 10],
+      [ 5,  5, 10, 25, 25, 10,  5,  5],
+      [ 0,  0,  0, 20, 20,  0,  0,  0],
+      [ 5, -5,-10,  0,  0,-10, -5,  5],
+      [ 5, 10, 10,-20,-20, 10, 10,  5],
+      [ 0,  0,  0,  0,  0,  0,  0,  0]
+    ]
+
+    var pawnGridBlack = pawnGridWhite.reverse();
+
+    var knightGridWhite = 
+    [
+      [-50,-40,-30,-30,-30,-30,-40,-50],
+      [-40,-20,  0,  0,  0,  0,-20,-40],
+      [-30,  0, 10, 15, 15, 10,  0,-30],
+      [-30,  5, 15, 20, 20, 15,  5,-30],
+      [-30,  0, 15, 20, 20, 15,  0,-30],
+      [-30,  5, 10, 15, 15, 10,  5,-30],
+      [-40,-20,  0,  5,  5,  0,-20,-40],
+      [-50,-40,-30,-30,-30,-30,-40,-50]
+    ];
+
+    var knightGridBlack = knightGridWhite.reverse();
+
+    var bishopGridWhite = 
+    [
+      [-20,-10,-10,-10,-10,-10,-10,-20],
+      [-10,  0,  0,  0,  0,  0,  0,-10],
+      [-10,  0,  5, 10, 10,  5,  0,-10],
+      [-10,  5,  5, 10, 10,  5,  5,-10],
+      [-10,  0, 10, 10, 10, 10,  0,-10],
+      [-10, 10, 10, 10, 10, 10, 10,-10],
+      [-10,  5,  0,  0,  0,  0,  5,-10],
+      [-20,-10,-10,-10,-10,-10,-10,-20]
+    ];
+
+    var bishopGridBlack = bishopGridWhite.reverse();
+
+    var rookGridWhite =
+    [
+      [ 0,  0,  0,  0,  0,  0,  0,  0],
+      [ 5, 10, 10, 10, 10, 10, 10,  5],
+      [-5,  0,  0,  0,  0,  0,  0, -5],
+      [-5,  0,  0,  0,  0,  0,  0, -5],
+      [-5,  0,  0,  0,  0,  0,  0, -5],
+      [-5,  0,  0,  0,  0,  0,  0, -5],
+      [-5,  0,  0,  0,  0,  0,  0, -5],
+      [ 0,  0,  0,  5,  5,  0,  0,  0]
+    ];
+
+    var rookGridBlack = rookGridWhite.reverse();
+
+    var queenGridWhite = 
+    [
+      [-20,-10,-10, -5, -5,-10,-10,-20],
+      [-10,  0,  0,  0,  0,  0,  0,-10],
+      [-10,  0,  5,  5,  5,  5,  0,-10],
+      [ -5,  0,  5,  5,  5,  5,  0, -5],
+      [  0,  0,  5,  5,  5,  5,  0, -5],
+      [-10,  5,  5,  5,  5,  5,  0,-10],
+      [-10,  0,  5,  0,  0,  0,  0,-10],
+      [-20,-10,-10, -5, -5,-10,-10,-20]
+    ];
+
+    var queenGridBlack = queenGridWhite.reverse();
+
+    var kingGridWhiteStart = 
+    [
+      [-30,-40,-40,-50,-50,-40,-40,-30],
+      [-30,-40,-40,-50,-50,-40,-40,-30],
+      [-30,-40,-40,-50,-50,-40,-40,-30],
+      [-30,-40,-40,-50,-50,-40,-40,-30],
+      [-20,-30,-30,-40,-40,-30,-30,-20],
+      [-10,-20,-20,-20,-20,-20,-20,-10],
+      [ 20, 20,  0,  0,  0,  0, 20, 20],
+      [ 20, 30, 10,  0,  0, 10, 30, 20]
+    ];
+
+    var kingGridBlackStart = kingGridWhiteStart.reverse();
+
+    var kingGridWhiteEnd =
+    [
+      [-50,-40,-30,-20,-20,-30,-40,-50],
+      [-30,-20,-10,  0,  0,-10,-20,-30],
+      [-30,-10, 20, 30, 30, 20,-10,-30],
+      [-30,-10, 30, 40, 40, 30,-10,-30],
+      [-30,-10, 30, 40, 40, 30,-10,-30],
+      [-30,-10, 20, 30, 30, 20,-10,-30],
+      [-30,-30,  0,  0,  0,  0,-30,-30],
+      [-50,-30,-30,-30,-30,-30,-30,-50]
+    ];
+
+    var kingGridBlackEnd = kingGridWhiteEnd.reverse();
+
+    // do not pick up pieces if the game is over
+    // only pick up pieces for White
+    var onDragStart = function(source, piece, position, orientation) {
+      if (game.in_checkmate() === true || game.in_draw() === true ||
+        (AIcolor === 'b' && piece.search(/^b/) !== -1) || (AIcolor === 'w' && piece.search(/^w/) !== -1)) {
+        return false;
+      }
+    };
+
+    var orderMoves = function(options, depth, isMaximizing) {
+      if (options.length <= 1) return;
+      for (var i = 0; i < options.length; i ++)
+      {
+        game.ugly_move(options[i]);
+        options[i].score = boardScore(AIcolor, game, depth - 1);
+        game.undo();
+      }
+      
+      options.sort(function(a, b) {
+          return (isMaximizing ? b.score - a.score : a.score - b.score);
+      });
+    }
+
+    var value = function(piece, player, i, j)
+    {
+      if (piece === 'r') return (500 + 
+        (player === 'w' ? rookGridWhite[i][j] : rookGridBlack[i][j]));
+      else if (piece === 'n') return (320 + 
+        (player === 'w' ? knightGridWhite[i][j] : knightGridBlack[i][j]));
+      else if (piece === 'b') return (330 + 
+        (player === 'w' ? bishopGridWhite[i][j] : bishopGridBlack[i][j]));
+      else if (piece === 'k') return (0 + 
+        (player === 'w' ? kingGridWhiteStart[i][j] : kingGridBlackStart[i][j]));
+      else if (piece === 'q') return (900 + 
+        (player === 'w' ? queenGridWhite[i][j] : queenGridBlack[i][j]));
+      else if (piece === 'p') return (100 + 
+        (player === 'w' ? pawnGridWhite[i][j] : pawnGridBlack[i][j]));
+    }
+
+    var boardScore = function(player, game, depth) {
+      var boardKey = zobristKey(game);
+      if (player === 'w')
+        pastScore = whiteScoreDict[boardKey];
+      else 
+        pastScore = blackScoreDict[boardKey];
+      if (pastScore)
+        return pastScore;
+      if (game.turn() === player && game.in_checkmate())
+        return -99999 + (maxDepth - depth) * 10;
+      else if (game.turn() !== player && game.in_checkmate())
+        return 99999 - (maxDepth - depth) * 10;
+      var scoreWhite = 0;
+      var scoreBlack = 0;
+      for (var i = 0; i < 8; i ++)
+      {
+        for (var j = 0; j < 8; j ++)
+        {
+          var square = game.board()[i][j]
+          if (square && square["color"] === 'w')
+            scoreWhite += value(square["type"], player, i, j);
+          else if (square && square["color"] !== 'w')
+            scoreBlack += value(square["type"], player, i, j);
+          if (depth === - 1 && (scoreWhite <= 1100 || scoreBlack <= 1100)) // sentinel depth to update kingGridTables
+          {
+            kingGridWhiteStart = kingGridWhiteEnd;
+            kingGridBlackStart = kingGridBlackEnd;
+          }
+        }
+      }
+      whiteScore = scoreWhite - scoreBlack;
+      blackScore = scoreBlack - scoreWhite;
+      // console.log(scoreWhite);
+      // console.log(scoreBlack);
+      whiteScoreDict[boardKey] = whiteScore;
+      blackScoreDict[boardKey] = blackScore;
+      return (player === 'w' ? whiteScore : blackScore);
+    } 
+
+    var minAI = function(depth, alpha, beta) {
+      var hashKey = zobristKey(game) + depth.toString();
+      if (miniScoreDict[hashKey])
+        return miniScoreDict[hashKey];
+      var options = game.ugly_moves();
+      if (depth <= 0 || options.length === 0)
+        return boardScore(AIcolor, game, depth);
+      if (maxDepth - 1 === depth) //only perform move ordering on "shallow" iteration
+        orderMoves(options, depth, false);
+      var bestMin = 99999;
+      for (var i = 0; i < options.length; i ++)
+      {
+        game.ugly_move(options[i]);
+        if (game.in_threefold_repetition())
+        {
+          game.undo();
+          continue;
+        }
+        bestMin = Math.min(bestMin, maxAI(depth - 1, alpha, beta));
+        beta = Math.min(beta, bestMin);
+        game.undo();
+        if (beta <= alpha)
+          break;
+      }
+      miniScoreDict[hashKey] = bestMin;
+      return bestMin;
+    }
+
+    var maxAI = function(depth, alpha, beta) {
+      var hashKey = zobristKey(game) + depth.toString();
+      if (maxiScoreDict[hashKey])
+        return maxiScoreDict[hashKey];
+      var options = game.ugly_moves();
+      if (depth <= 0 || options.length === 0)
+        return boardScore(AIcolor, game, depth);
+      var bestMax = -99999;
+      for (var i = 0; i < options.length; i ++)
+      {
+        game.ugly_move(options[i]);
+        if (game.in_threefold_repetition())
+        {
+          game.undo();
+          continue;
+        }
+        bestMax = Math.max(bestMax, minAI(depth - 1, alpha, beta));
+        alpha = Math.max(alpha, bestMax);
+        game.undo();
+        if (beta <= alpha)
+          break;
+      }
+      maxiScoreDict[hashKey] = bestMax;
+      return bestMax;
+    }
+
+    var bestAI = function() {
+      var options = game.ugly_moves();
+      if (!options.length) return;
+      orderMoves(options, maxDepth, true);
+      var bestScore = -99999;
+      var moveIndex = -1;
+      var alpha = -99999;
+      var beta = 99999;
+      for (i = 0; i < options.length; i++)
+      {
+        game.ugly_move(options[i]);
+        var moveScore = minAI(maxDepth - 1, alpha, beta);
+        if (moveScore > bestScore)
+        {
+          moveIndex = i;
+          bestScore = moveScore;
+          alpha = Math.max(alpha, bestScore);
+        };
+        game.undo();
+        if (beta <= alpha)
+          break;
+      }
+      game.ugly_move(options[moveIndex]);
+      boardScore(AIcolor, game, -1);//update king scoreboard if required, -1 is sentinel to do so
+      board.position(game.fen()); 
+      if (game.in_checkmate())
+        window.setTimeout(alert("Checkmate!"), 250);
+      else if (game.in_draw())
+        window.setTimeout(alert("Draw!"), 250);
+      else if (game.in_stalemate())
+        window.setTimeout(alert("Stalemate!"), 250);
+      else if (game.in_threefold_repetition())
+        window.setTimeout(alert("Threefold repetition!"), 250);
+      else if (game.insufficient_material())
+        window.setTimeout(alert("Draw by insufficient material!"), 250);
+    }
+
+
+    var onDrop = function(source, target) {
+      // see if the move is legal
+      var move = game.move({
+        from: source,
+        to: target,
+        promotion: 'q' // NOTE: always promote to a queen for example simplicity
+      });
+
+      // illegal move
+      if (move === null) return 'snapback';
+    };
+
+    // now that we have moved in game.move, let's update our position on the snap end
+    var onSnapEnd = function() {
+      board.position(game.fen());
+      window.setTimeout(bestAI, 250);
+    };
+
+    var cfg = {
+      draggable: true,
+      position: 'start',
+      onDragStart: onDragStart,
+      onDrop: onDrop,
+      onSnapEnd: onSnapEnd
+    };
+    if (AIcolor === 'w')
+      cfg["orientation"] = "black";
+    board = ChessBoard('board', cfg);
+    if (AIcolor === 'w')
+      window.setTimeout(bestAI, 250);
+    </script>
+  </body>
+</html>
