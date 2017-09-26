@@ -2,6 +2,7 @@
 <html>
   <head>
     <title>ChessPro</title>
+    <script src="https://use.fontawesome.com/de6c17939b.js"></script>
     <script src="js/jquery-3.2.1.min.js"></script>
   </head>
   <body>
@@ -9,8 +10,8 @@
       <img src="/img/king.png" id="kingContainer">
       <h1 class="helvetica">Welcome to ChessPro!</h1>
       <div id="buttonDiv">
-        <a onclick="redirectToFriend()"><h2 class="helvetica btn-custom" id="playFriend">Play a Friend</h2></a>
-        <a onclick="redirectToAI()"><h2 class="helvetica btn-custom" id="playAI">Play the AI</h2></a>
+        <a onclick="redirectToFriend();"><h2 class="helvetica btn-custom" id="playFriend">Play a Friend</h2></a>
+        <a onclick="redirectToAI();"><h2 class="helvetica btn-custom" id="playAI">Play the AI</h2></a>
       </div>
     </div>
   </body>
@@ -38,7 +39,7 @@
     });
 
     redirectToFriend = (function () {
-        
+      window.location.href="/playFriend?player="+chosenPlayer;
     });
 </script>
 

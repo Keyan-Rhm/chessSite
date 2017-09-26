@@ -6,11 +6,17 @@
     <script src="js/chessboard-0.3.0.min.js"></script>
     <script src="js/jquery-3.2.1.min.js"></script>
     <script src="js/chess.js"></script>
+    <script src="https://use.fontawesome.com/de6c17939b.js"></script>
   </head>
   <body>
-    <div id="board" class="triggered" style="width: 400px"></div>
-    <%= myTinyURL %>
+    <div id="background">
+      <div id="board" class="triggered" style="width: 400px"></div>
+      <div id="actions">
+      <i class="fa fa-3x fa-power-off" aria-hidden="true" onclick="restart();"></i><i class="fa fa-3x fa-flag-o" aria-hidden="true" onclick="resign();"></i><i class="fa fa-3x fa-undo" onclick="takeBack();" aria-hidden="true"></i>
+      </div>
+    </div>
     <script>
+    var hasResigned = false;
     var memes = '<%-myTinyURL%>';
     var player = '<%-player%>';
     console.log(memes);
@@ -216,7 +222,7 @@
     // only pick up pieces for White
     var onDragStart = function(source, piece, position, orientation) {
       if (game.in_checkmate() === true || game.in_draw() === true ||
-        (AIcolor === 'b' && piece.search(/^b/) !== -1) || (AIcolor === 'w' && piece.search(/^w/) !== -1)) {
+        (AIcolor === 'b' && piece.search(/^b/) !== -1) || (AIcolor === 'w' && piece.search(/^w/) !== -1) || hasResigned) {
         return false;
       }
     };
@@ -274,7 +280,7 @@
             scoreWhite += value(square["type"], player, i, j);
           else if (square && square["color"] !== 'w')
             scoreBlack += value(square["type"], player, i, j);
-          if (depth === - 1 && (scoreWhite <= 1100 || scoreBlack <= 1100)) // sentinel depth to update kingGridTables
+          if (depth === -1 && (scoreWhite <= 1100 || scoreBlack <= 1100)) // sentinel depth to update kingGridTables
           {
             kingGridWhiteStart = kingGridWhiteEnd;
             kingGridBlackStart = kingGridBlackEnd;
@@ -368,7 +374,12 @@
       }
       game.ugly_move(options[moveIndex]);
       boardScore(AIcolor, game, -1);//update king scoreboard if required, -1 is sentinel to do so
-      board.position(game.fen()); 
+      
+      $.when(board.position(game.fen())).done(checkForGameEnd());
+
+    }
+
+    var checkForGameEnd = function (){
       if (game.in_checkmate())
         window.setTimeout(alert("Checkmate!"), 250);
       else if (game.in_draw())
@@ -394,6 +405,29 @@
       if (move === null) return 'snapback';
     };
 
+    var resign = function() {
+      if (!hasResigned)
+      {
+        hasResigned = true;
+        window.setTimeout(alert("You have resigned - AI wins!"), 250);
+      }
+    }
+
+    var restart = function() {
+      game = new Chess();
+      board.position(game.fen());
+      hasResigned = false; 
+    }
+
+    var takeBack = function() {
+      if (!hasResigned)
+      {
+        game.undo();
+        game.undo();
+        board.position(game.fen()); 
+      }
+    }
+
     // now that we have moved in game.move, let's update our position on the snap end
     var onSnapEnd = function() {
       board.position(game.fen());
@@ -413,5 +447,45 @@
     if (AIcolor === 'w')
       window.setTimeout(bestAI, 250);
     </script>
+    <style type="text/css">
+    #background {
+      width: 100%;
+      height: 100%;
+      position: absolute;
+      top: 0px;
+      left: 0px;
+      z-index: 0;
+      background-color: #00ccff;
+    }
+
+    .fa-3x {
+      background-color: #0099ff;
+      padding: 4px 4px 4px 4px;
+      margin: 0px 0px 0px 0px;
+      display: inline-block;
+    }
+    
+    .fa-3x:hover { 
+      background-color: yellow;
+      border-color: #006699;
+    }
+
+    #board {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      margin-top: -200px;
+      margin-left: -200px;
+    }
+
+    #actions {
+      position: absolute;
+      margin-top: 210px;
+      margin-left: -75px;
+      top: 50%;
+      left: 50%;
+
+    }
+    </style>
   </body>
 </html>

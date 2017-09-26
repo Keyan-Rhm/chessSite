@@ -21,9 +21,8 @@ app.get('/playAI', function(req, res) {
   res.render('index', {myTinyURL: shortid.generate(), player: req.query.player});
 });
 
-app.get('/:id', function(req, res) {
-  console.log("Memes" + req.params.id);
-  res.render('multi', {numPlayers: req.params.id, player: req.query.player});
+app.get('/playFriend', function(req, res) {
+  res.render('multi', {player: req.query.player});
   console.log(players);
   players -= 1;
 });
