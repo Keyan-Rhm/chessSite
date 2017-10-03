@@ -1,7 +1,18 @@
-var shortid = require('shortid');
 var express = require('express');
 var cookieParser = require('cookie-parser');
 var app = express();
+
+var moveSignal = 'chess position';
+var drawSignal = 'draw offer';
+var acceptDraw = 'accepting draw';
+var rejectDraw = 'rejecting draw';
+var restartSignal = 'restart offer';
+var acceptRestart = 'accepting restart';
+var rejectRestart = 'rejecting restart';
+var undoSignal = 'undo offer';
+var acceptUndo = 'accepting undo';
+var rejectUndo = 'rejecting undo';
+var resignSignal = 'player resigned';
 
 app.use(express.static(__dirname + '/static'));
 app.set('views', __dirname + '/static/views');
@@ -18,24 +29,58 @@ app.get('/', function(req, res) {
 });
 
 app.get('/playAI', function(req, res) {
-  res.render('index', {myTinyURL: shortid.generate(), player: req.query.player});
+  res.render('index', {player: req.query.player});
 });
 
 app.get('/playFriend', function(req, res) {
-  res.render('multi', {player: req.query.player});
+  res.render('multi', {player: req.query.player, lobbyID: req.query.lobbyID});
   console.log(players);
   players -= 1;
 });
 
 io.on('connection', function(socket) {
   console.log('a user connected');
+
   socket.on('disconnect', function() {
     console.log('user disconnected');
   });
-  socket.on('chess position', function(position) {
-    console.log('position: ' + position);
-    io.emit('chess position', position);
+
+  socket.on(moveSignal, function(info) {
+    io.emit(moveSignal, info);
   });
+
+  socket.on(resignSignal, function (info) {
+    io.emit(resignSignal, info);
+  });
+
+  socket.on(restartSignal, function (info) {
+    io.emit('accept restart?', info);
+  });
+
+  socket.on(drawSignal, function (info) {
+    io.emit('accept draw?', info);
+  });
+
+  socket.on('draw accepted', function (info) {
+    io.emit('draw accepted', info);
+  });
+
+  socket.on('restart accepted', function (info) {
+    io.emit('restart accepted', info);
+  });
+
+  socket.on('decline all', function(info) {
+    io.emit('decline all', info);
+  });
+
+  socket.on('accept undo?', function (info) {
+    io.emit('accept undo?', info);
+  });
+
+  socket.on('undo accepted', function (info) {
+    io.emit('undo accepted', info);
+  });
+
 });
 
 http.listen(3000, function() {

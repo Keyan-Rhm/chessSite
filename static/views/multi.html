@@ -12,20 +12,41 @@
   </head>
   
   <body>
+
     <div id="background">
       <div id="board" class="triggered" style="width: 400px"></div>
       <div id="actions">
       <i class="fa fa-3x fa-power-off" aria-hidden="true" onclick="restart();"></i><i class="fa fa-3x fa-handshake-o" onclick="offerDraw();" aria-hidden="true"></i><i class="fa fa-3x fa-flag-o" aria-hidden="true" onclick="resign();"></i><i class="fa fa-3x fa-undo" onclick="takeBack();" aria-hidden="true"></i>
       </div>
     </div>
+
     <script>
+    var player = '<%-player%>';
+    var lobbyID = '<%-lobbyID%>';
+    var moveSignal = 'chess position';
+    var drawSignal = 'draw offer';
+    var acceptDraw = 'accepting draw';
+    var rejectDraw = 'rejecting draw';
+    var restartSignal = 'restart offer';
+    var acceptRestart = 'accepting restart';
+    var rejectRestart = 'rejecting restart';
+    var undoSignal = 'undo offer';
+    var acceptUndo = 'accepting undo';
+    var rejectUndo = 'rejecting undo';
+    var resignSignal = 'player resigned';
+
+    var enemy;
+    if (player === 'w')
+      enemy = 'b';
+    else
+      enemy = 'w';
+
     var hasResigned = false;
     var socket = io();
     var board, game = new Chess();
-    var colors = ['w', 'b'];
 
     var onDragStart = function(source, piece, position, orientation) {
-      if (game.in_checkmate() === true || game.in_draw() === true || piece.search(/^b/) !== -1)
+      if (game.in_checkmate() === true || game.in_draw() === true || piece.search(enemy) !== -1 ||hasResigned)
         return false;
     };
 
@@ -43,8 +64,44 @@
 
     // now that we have moved in game.move, let's update our position on the snap end
     var onSnapEnd = function() {
-      socket.emit('chess position', game.fen());
+      socket.emit(moveSignal, {pgn: game.pgn(), lobbyID: lobbyID});
+      socket.emit('decline all', {lobbyID: lobbyID, player: player});
     };
+
+    socket.on('decline all', function(msgData) {
+      if (msgData.lobbyID !== lobbyID)
+        return;
+      $(".fa-power-off").attr("onclick","restart();");
+      $(".fa-handshake-o").attr("onclick","offerDraw();");
+      $(".fa-undo").attr("onclick","takeBack();");
+      $(".fa-3x").removeAttr('style');
+    });
+
+    var takeBack = function () {
+      $(".fa-undo").css("background-color", "yellow");
+      socket.emit('accept undo?', {lobbyID: lobbyID, player: player});
+    }
+
+    socket.on('accept undo?', function(msgData) {
+      if (msgData.lobbyID !== lobbyID || msgData.player === player)
+        return;
+      $(".fa-undo").css("background-color", "yellow");
+      $(".fa-undo").attr("onclick","undoAccepted();");
+    });
+
+    var undoAccepted = function() {
+      socket.emit('undo accepted', {lobbyID: lobbyID});
+    }
+
+    socket.on('undo accepted', function (msgData) {
+      if (msgData.lobbyID !== lobbyID)
+        return;
+      game.undo();
+      board.position(game.fen());
+      $(".fa-undo").removeAttr('style');
+      $(".fa-undo").attr("onclick","takeBack();");
+      hasResigned = false;
+    });
 
     var cfg = {
       draggable: true,
@@ -54,19 +111,108 @@
       onSnapEnd: onSnapEnd
     };
 
-    $(function () {
-      socket.on('chess position', function(position) {
-        board.position(position);
-        game.load(position);
-      });
+    socket.on(moveSignal, function(msgData) {
+      if (msgData.lobbyID !== lobbyID)
+        return;
+      var pgn = msgData.pgn;
+      game.load_pgn(pgn);
+      board.position(game.fen());
     });
+
+
+    socket.on(resignSignal, function(msgData) {
+      if (msgData.lobbyID !== lobbyID || msgData.player === player)
+        return;
+      hasResigned = true;
+      var resigningPlayer, winningPlayer;
+      if (player === 'w')
+      {
+        resigningPlayer = "Black";
+        winningPlayer = "white";
+      }
+      else
+      {
+        resigningPlayer = "White";
+        winningPlayer = "black";
+      }
+      var resignString = resigningPlayer + " has resigned - " + winningPlayer + " wins!";
+      window.setTimeout(alert(resignString), 250);
+    });
+
+    socket.on('accept restart?', function(msgData) {
+      if (msgData.lobbyID !== lobbyID || msgData.player === player)
+        return;
+      $(".fa-power-off").css("background-color", "yellow");
+      $(".fa-power-off").attr("onclick","restartAccepted();");
+    });
+
+    socket.on('accept draw?', function(msgData) {
+      if (msgData.lobbyID !== lobbyID || msgData.player === player)
+        return;
+      $(".fa-handshake-o").css("background-color", "yellow");
+      $(".fa-handshake-o").attr("onclick","drawAccepted();");
+    });
+
+    var restartAccepted = function() {
+      socket.emit('restart accepted', {lobbyID: lobbyID});
+    }
+
+    var drawAccepted = function () {
+      socket.emit('draw accepted', {lobbyID: lobbyID});
+    }
+
+    socket.on('draw accepted', function (msgData) {
+      if (msgData.lobbyID !== lobbyID && hasResigned === false)
+        return;
+      $(".fa-handshake-o").removeAttr('style');
+      hasResigned = true;
+      alert("Draw!");
+    });
+
+    socket.on('restart accepted', function (msgData) {
+      if (msgData.lobbyID !== lobbyID)
+        return
+      $(".fa-power-off").removeAttr('style');
+      hasResigned = false;
+      game = new Chess();
+      board.position(game.fen());
+      $(".fa-power-off").attr("onclick","restart();");
+      $(".fa-handshake-o").attr("onclick","offerDraw();");
+    });
+
+    if (player === 'b')
+      cfg["orientation"] = "black";
+
     board = ChessBoard('board', cfg);
+
+    var restart = function() {
+      $(".fa-power-off").css("background-color", "yellow");
+      socket.emit(restartSignal, {lobbyID: lobbyID, player: player});
+    }
+
+    var offerDraw = function() {
+      $(".fa-handshake-o").css("background-color", "yellow");
+      socket.emit(drawSignal, {lobbyID: lobbyID, player: player});
+    }
 
     var resign = function() {
       if (!hasResigned)
       {
+        socket.emit(resignSignal, {lobbyID: lobbyID, player: player});
         hasResigned = true;
-        window.setTimeout(alert("You have resigned - memes wins!"), 250);
+        var resigningPlayer, winningPlayer;
+        if (player === 'w')
+        {
+          resigningPlayer = "White";
+          winningPlayer = "black";
+        }
+        else
+        {
+          resigningPlayer = "Black";
+          winningPlayer = "white"
+        }
+        var resignString = resigningPlayer + " has resigned - " + winningPlayer + " wins!";
+        alert(resignString);
       }
     }
 

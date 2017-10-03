@@ -13,13 +13,16 @@
       <div id="board" class="triggered" style="width: 400px"></div>
       <div id="actions">
       <i class="fa fa-3x fa-power-off" aria-hidden="true" onclick="restart();"></i><i class="fa fa-3x fa-flag-o" aria-hidden="true" onclick="resign();"></i><i class="fa fa-3x fa-undo" onclick="takeBack();" aria-hidden="true"></i>
+        <div id="methods">
+          <div id="restart" style="position: absolute; z-index: 1; visibility:hidden;">Restart</div>
+          <div id="resign" style="position: absolute; z-index: 2; visibility:hidden;">Resign</div>
+          <div id="undo" style="position: absolute; z-index: 3; visibility:hidden;">Undo</div>
+        </div>
       </div>
     </div>
     <script>
     var hasResigned = false;
-    var memes = '<%-myTinyURL%>';
     var player = '<%-player%>';
-    console.log(memes);
     var board, game = new Chess();
 
     var colors = ['w', 'b'];
@@ -65,34 +68,6 @@
       lo = zobrist[pieceVal * 128 + (piece && piece.color === 'w' ? 0 : 1) * 64 + posVal + 1];
       return [hi, lo];
     }
-
-    // TODO: optimize zobrist hashing to not need for loop
-    // var zobristID = [0, 0];
-    // var startBoard = game.board()
-    // var valueHi = 0;
-    // var valueLo = 0;
-    // for (var i = 0; i < 8; i ++)
-    // {
-    //   for (var j = 0; j < 8; j ++)
-    //   {
-    //     zobristArr = zobristVal(startBoard[i][j], i, j);
-    //     valueHi = valueHi^zobristArr[0];
-    //     valueLo = valueLo^zobristArr[1];
-    //   }
-    // }
-    // zobristID = [valueHi, valueLo];
-
-    // var zobristMove = function(move) {
-    //   fromPosition = positionIndex(move.from);
-    //   toPosition = positionIndex(move.to);
-    //   console.log(move.piece);
-    //   console.log(game.board()[toPosition[0]][toPosition[1]]);
-    //   zobristPairFrom = zobristVal(move.piece, fromPosition[0], fromPosition[1]);
-    //   zobristPairTo = zobristVal(game.board()[toPosition[0]][toPosition[1]], toPosition[0], toPosition[1]);
-    //   zobristPairNew = zobristVal(move.piece, toPosition[0], toPosition[1]);
-    //   zobristID[0] = zobristID[0] ^ zobristPairFrom[0] ^ zobristPairTo[0] ^ zobristPairNew[0];
-    //   zobristID[1] = zobristID[1] ^ zobristPairFrom[1] ^ zobristPairTo[1] ^ zobristPairNew[1];
-    // }
 
     var zobristKey = function(game) {
       var board = game.board();
@@ -484,7 +459,12 @@
       margin-left: -75px;
       top: 50%;
       left: 50%;
+    }
 
+    #methods {
+      position: relative;
+      transform: translateX(50%);
+      margin-left: -45px;
     }
     </style>
   </body>
