@@ -14,9 +14,9 @@
       <div id="actions">
       <i class="fa fa-3x fa-power-off" aria-hidden="true" onclick="restart();"></i><i class="fa fa-3x fa-flag-o" aria-hidden="true" onclick="resign();"></i><i class="fa fa-3x fa-undo" onclick="takeBack();" aria-hidden="true"></i>
         <div id="methods">
-          <div id="restart" style="position: absolute; z-index: 1; visibility:hidden;">Restart</div>
-          <div id="resign" style="position: absolute; z-index: 2; visibility:hidden;">Resign</div>
-          <div id="undo" style="position: absolute; z-index: 3; visibility:hidden;">Undo</div>
+          <div id="restartMethod" style="position: absolute; z-index: 1; display:none">Restart</div>
+          <div id="resignMethod" style="position: absolute; z-index: 2; display:none;">Resign</div>
+          <div id="undoMethod" style="position: absolute; z-index: 3; display:none;">Undo</div>
         </div>
       </div>
     </div>
@@ -350,23 +350,22 @@
       game.ugly_move(options[moveIndex]);
       boardScore(AIcolor, game, -1);//update king scoreboard if required, -1 is sentinel to do so
       
-      $.when(board.position(game.fen())).done(checkForGameEnd());
-
+      board.position(game.fen());
+      setTimeout(function() { checkForGameEnd() }, 300);
     }
 
     var checkForGameEnd = function (){
       if (game.in_checkmate())
-        window.setTimeout(alert("Checkmate!"), 250);
+        alert("Checkmate!");
       else if (game.in_draw())
-        window.setTimeout(alert("Draw!"), 250);
+        alert("Draw!");
       else if (game.in_stalemate())
-        window.setTimeout(alert("Stalemate!"), 250);
+        alert("Stalemate!");
       else if (game.in_threefold_repetition())
-        window.setTimeout(alert("Threefold repetition!"), 250);
+        alert("Threefold repetition!");
       else if (game.insufficient_material())
-        window.setTimeout(alert("Draw by insufficient material!"), 250);
+        alert("Draw by insufficient material!");
     }
-
 
     var onDrop = function(source, target) {
       // see if the move is legal
@@ -421,6 +420,25 @@
     board = ChessBoard('board', cfg);
     if (AIcolor === 'w')
       window.setTimeout(bestAI, 250);
+
+    $(".fa-undo").mouseenter(function() {
+      $("#undoMethod").show();
+    }).mouseleave(function() {
+      $("#undoMethod").hide();
+    });
+
+    $(".fa-power-off").mouseenter(function() {
+      $("#restartMethod").show();
+    }).mouseleave(function() {
+      $("#restartMethod").hide();
+    });
+
+    $(".fa-flag-o").mouseenter(function() {
+      $("#resignMethod").show();
+    }).mouseleave(function() {
+      $("#resignMethod").hide();
+    });
+
     </script>
     <style type="text/css">
     #background {

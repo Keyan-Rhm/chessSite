@@ -16,11 +16,19 @@
     <div id="background">
       <div id="board" class="triggered" style="width: 400px"></div>
       <div id="actions">
-      <i class="fa fa-3x fa-power-off" aria-hidden="true" onclick="restart();"></i><i class="fa fa-3x fa-handshake-o" onclick="offerDraw();" aria-hidden="true"></i><i class="fa fa-3x fa-flag-o" aria-hidden="true" onclick="resign();"></i><i class="fa fa-3x fa-undo" onclick="takeBack();" aria-hidden="true"></i>
+        <i class="fa fa-3x fa-power-off" aria-hidden="true" onclick="restart();"></i><i class="fa fa-3x fa-handshake-o" onclick="offerDraw();" aria-hidden="true"></i><i class="fa fa-3x fa-flag-o" aria-hidden="true" onclick="resign();"></i><i class="fa fa-3x fa-undo" onclick="takeBack();" aria-hidden="true"></i><i class="fa fa-3x fa-plus" aria-hidden="true" onclick="addPlayer();"></i>
+        <div id="methods">
+            <div id="restartMethod" style="position: absolute; z-index: 1; display:none">Restart</div>
+            <div id="resignMethod" style="position: absolute; z-index: 2; display:none;">Resign</div>
+            <div id="undoMethod" style="position: absolute; z-index: 3; display:none;">Undo</div>
+            <div id="addPlayerMethod" style="position: absolute; z-index: 3; display:none;">Invite</div>
+            <div id="offerDrawMethod" style="position: absolute; z-index: 3; display:none;">Draw</div>
+          </div>
+        </div>
       </div>
     </div>
 
-    <script>
+    <script>    
     var player = '<%-player%>';
     var lobbyID = '<%-lobbyID%>';
     var moveSignal = 'chess position';
@@ -35,15 +43,65 @@
     var rejectUndo = 'rejecting undo';
     var resignSignal = 'player resigned';
 
+    $("p").hover(function(){
+        $(this).css("background-color", "yellow");
+        }, function(){
+        $(this).css("background-color", "pink");
+    });
+
     var enemy;
     if (player === 'w')
       enemy = 'b';
-    else
+    else if (player === 'b')
       enemy = 'w';
+
+    $(".fa-undo").mouseenter(function() {
+      $("#undoMethod").show();
+    }).mouseleave(function() {
+      $("#undoMethod").hide();
+    });
+
+    $(".fa-power-off").mouseenter(function() {
+      $("#restartMethod").show();
+    }).mouseleave(function() {
+      $("#restartMethod").hide();
+    });
+
+    $(".fa-flag-o").mouseenter(function() {
+      $("#resignMethod").show();
+    }).mouseleave(function() {
+      $("#resignMethod").hide();
+    });
+
+    $(".fa-handshake-o").mouseenter(function() {
+      $("#offerDrawMethod").show();
+    }).mouseleave(function() {
+      $("#offerDrawMethod").hide();
+    });
+
+    $(".fa-plus").mouseenter(function() {
+      $("#addPlayerMethod").show();
+    }).mouseleave(function() {
+      $("#addPlayerMethod").hide();
+    });
 
     var hasResigned = false;
     var socket = io();
+
     var board, game = new Chess();
+
+    var addPlayer = function() {
+      var addPlayerString = "To play a friend, send them this URL:";
+      prompt(addPlayerString, window.location.href.replace('player=' + player, 'player=' + enemy));
+    }
+
+    socket.emit('request position', {lobbyID: lobbyID, player: player});
+
+    socket.on('request position', function (msgData) {
+      if (msgData.lobbyID !== lobbyID || msgData.player === player)
+        return;
+      socket.emit(moveSignal, {pgn: game.pgn(), lobbyID: lobbyID});
+    });
 
     var onDragStart = function(source, piece, position, orientation) {
       if (game.in_checkmate() === true || game.in_draw() === true || piece.search(enemy) !== -1 ||hasResigned)
@@ -66,7 +124,31 @@
     var onSnapEnd = function() {
       socket.emit(moveSignal, {pgn: game.pgn(), lobbyID: lobbyID});
       socket.emit('decline all', {lobbyID: lobbyID, player: player});
+      checkForGameEnd();  
     };
+
+    var checkForGameEnd = function (){
+      var alertString;
+      if (game.in_checkmate())
+        alertString = "Checkmate!";
+      else if (game.in_draw())
+        alertString = "Draw!";
+      else if (game.in_stalemate())
+        alertString = "Stalemate!";
+      else if (game.in_threefold_repetition())
+        alertString = "Threefold repetition!";
+      else if (game.insufficient_material())
+        alertString = "Draw by insufficient material!";
+
+      if (alertString)
+        socket.emit('broadcast alert', {lobbyID: lobbyID, alertString: alertString})
+    }
+
+    socket.on('broadcast alert', function(msgData) {
+      if (lobbyID !== lobbyID)
+        return;
+      alert(msgData.alertString);
+    });
 
     socket.on('decline all', function(msgData) {
       if (msgData.lobbyID !== lobbyID)
@@ -78,8 +160,11 @@
     });
 
     var takeBack = function () {
-      $(".fa-undo").css("background-color", "yellow");
-      socket.emit('accept undo?', {lobbyID: lobbyID, player: player});
+      if (!hasResigned)
+      {
+        $(".fa-undo").css("background-color", "yellow");
+        socket.emit('accept undo?', {lobbyID: lobbyID, player: player});
+      }
     }
 
     socket.on('accept undo?', function(msgData) {
@@ -100,7 +185,6 @@
       board.position(game.fen());
       $(".fa-undo").removeAttr('style');
       $(".fa-undo").attr("onclick","takeBack();");
-      hasResigned = false;
     });
 
     var cfg = {
@@ -124,19 +208,20 @@
       if (msgData.lobbyID !== lobbyID || msgData.player === player)
         return;
       hasResigned = true;
-      var resigningPlayer, winningPlayer;
-      if (player === 'w')
-      {
-        resigningPlayer = "Black";
-        winningPlayer = "white";
-      }
-      else
+      var resigningPlayer = msgData.player;
+      var winningPlayer;
+      if (resigningPlayer === 'w')
       {
         resigningPlayer = "White";
         winningPlayer = "black";
       }
+      else
+      {
+        resigningPlayer = "Black";
+        winningPlayer = "white";
+      }
       var resignString = resigningPlayer + " has resigned - " + winningPlayer + " wins!";
-      window.setTimeout(alert(resignString), 250);
+      alert(resignString);
     });
 
     socket.on('accept restart?', function(msgData) {
@@ -162,7 +247,7 @@
     }
 
     socket.on('draw accepted', function (msgData) {
-      if (msgData.lobbyID !== lobbyID && hasResigned === false)
+      if (msgData.lobbyID !== lobbyID || hasResigned === true)
         return;
       $(".fa-handshake-o").removeAttr('style');
       hasResigned = true;
@@ -178,6 +263,7 @@
       board.position(game.fen());
       $(".fa-power-off").attr("onclick","restart();");
       $(".fa-handshake-o").attr("onclick","offerDraw();");
+      $(".fa-undo").attr("onclick","takeBack();");
     });
 
     if (player === 'b')
@@ -191,8 +277,11 @@
     }
 
     var offerDraw = function() {
-      $(".fa-handshake-o").css("background-color", "yellow");
-      socket.emit(drawSignal, {lobbyID: lobbyID, player: player});
+      if (!hasResigned)
+      {
+        $(".fa-handshake-o").css("background-color", "yellow");
+        socket.emit(drawSignal, {lobbyID: lobbyID, player: player});
+      }
     }
 
     var resign = function() {
@@ -251,10 +340,15 @@
     #actions {
       position: absolute;
       margin-top: 210px;
-      margin-left: -115px;
+      margin-left: -135px;
       top: 50%;
       left: 50%;
+    }
 
+    #methods {
+      position: relative;
+      transform: translateX(50%);
+      margin-left: -45px;
     }
     </style>
   </body>

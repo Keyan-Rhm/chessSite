@@ -22,8 +22,6 @@ app.set('view engine', 'html');
 var http = require('http').Server(app);
 var io = require('/usr/local/lib/node_modules/socket.io')(http);
 
-var players = 2;
-
 app.get('/', function(req, res) {
   res.render('home');
 });
@@ -35,7 +33,6 @@ app.get('/playAI', function(req, res) {
 app.get('/playFriend', function(req, res) {
   res.render('multi', {player: req.query.player, lobbyID: req.query.lobbyID});
   console.log(players);
-  players -= 1;
 });
 
 io.on('connection', function(socket) {
@@ -47,6 +44,10 @@ io.on('connection', function(socket) {
 
   socket.on(moveSignal, function(info) {
     io.emit(moveSignal, info);
+  });
+
+  socket.on('reqest position', function(info) {
+    io.emit('request position', info);
   });
 
   socket.on(resignSignal, function (info) {
@@ -73,12 +74,20 @@ io.on('connection', function(socket) {
     io.emit('decline all', info);
   });
 
+  socket.on('broadcast alert', function(info) {
+    io.emit('broadcast alert', info);
+  });
+
   socket.on('accept undo?', function (info) {
     io.emit('accept undo?', info);
   });
 
   socket.on('undo accepted', function (info) {
     io.emit('undo accepted', info);
+  });
+
+  socket.on('request position', function (info) {
+    io.emit('request position', info);
   });
 
 });
