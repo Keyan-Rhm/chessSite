@@ -59,25 +59,25 @@ app.get('/playFriend', function(req, res) {
   var player = req.query.player;
   var lobbyID = req.query.lobbyID;
 
-  var IP = requestIp.getClientIp(req);
+  // var IP = requestIp.getClientIp(req);
 
-  if (player === 'b' || player === 'w')
-  {
-    if (!lobbyCapacity[lobbyID])
-    {
-      lobbyCapacity[lobbyID] = player;
-      ipToEntryKey[IP + player] = lobbyID + player;
-    }
-    else if (lobbyCapacity[lobbyID] === 'w' && player === 'b' || lobbyCapacity[lobbyID] === 'b' && player === 'w')
-    {
-      lobbyCapacity[lobbyID] += player;
-      ipToEntryKey[IP + player] = lobbyID + player;
-    }
-    else if (!allowedAccess(IP, lobbyID, player))
-      player = 'spectator';
-  }
+  // if (player === 'b' || player === 'w')
+  // {
+  //   if (!lobbyCapacity[lobbyID])
+  //   {
+  //     lobbyCapacity[lobbyID] = player;
+  //     ipToEntryKey[IP + player] = lobbyID + player;
+  //   }
+  //   else if (lobbyCapacity[lobbyID] === 'w' && player === 'b' || lobbyCapacity[lobbyID] === 'b' && player === 'w')
+  //   {
+  //     lobbyCapacity[lobbyID] += player;
+  //     ipToEntryKey[IP + player] = lobbyID + player;
+  //   }
+  //   else if (!allowedAccess(IP, lobbyID, player))
+  //     player = 'spectator';
+  // }
 
-  console.log(lobbyCapacity[lobbyID]);
+  // console.log(lobbyCapacity[lobbyID]);
 
   res.render('multi', {player: player, lobbyID: req.query.lobbyID});
 });
