@@ -45,7 +45,7 @@ app.engine('html', require('ejs').renderFile);
 app.set('view engine', 'html');
 
 var http = require('http').Server(app);
-var io = require('/usr/local/lib/node_modules/socket.io')(http);
+var io = require('socket.io')(http);
 
 app.get('/', function(req, res) {
   res.render('home');
