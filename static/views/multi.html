@@ -334,6 +334,7 @@
           winningPlayer = "white"
         }
         var resignString = resigningPlayer + " has resigned - " + winningPlayer + " wins!";
+        socket.emit('decline all', {lobbyID: lobbyID, player: player});
         alert(resignString);
       }
     }
