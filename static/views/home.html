@@ -32,15 +32,15 @@
     var chosenPlayer = 'w';
 
     changePic = (function() {
-        if (document.getElementById("kingContainer").src == window.location.hostname + "/img/king.png") 
+        if (document.getElementById("kingContainer").src == window.location.href + "img/king.png") 
         {
             chosenPlayer = 'b';
-            document.getElementById("kingContainer").src = window.location.hostname + "/img/king2.png";
+            document.getElementById("kingContainer").src = window.location.href + "img/king2.png";
         }
         else 
         {
             chosenPlayer = 'w';
-            document.getElementById("kingContainer").src = "http://localhost:3000/img/king.png";
+            document.getElementById("kingContainer").src = window.location.href + "img/king.png";
         }
     }); 
     document.getElementById("kingContainer").addEventListener("click", changePic);
