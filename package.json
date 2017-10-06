@@ -7,6 +7,7 @@
     "cookie-parser": "^1.4.3",
     "ejs": "^2.5.7",
     "express": "^4.15.2",
+    "request-ip": "^2.0.2",
     "shortid": "^2.2.8",
     "signal": "^3.0.0",
     "signal-js": "^1.0.2",

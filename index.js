@@ -1,6 +1,11 @@
 var express = require('express');
-var cookieParser = require('cookie-parser');
 var app = express();
+
+var requestIp = require('request-ip');
+
+var lobbyPositions = {};
+var lobbyCapacity = {};
+var ipToEntryKey = {};
 
 var moveSignal = 'chess position';
 var drawSignal = 'draw offer';
@@ -13,6 +18,26 @@ var undoSignal = 'undo offer';
 var acceptUndo = 'accepting undo';
 var rejectUndo = 'rejecting undo';
 var resignSignal = 'player resigned';
+
+function allowedAccess (IP, lobbyID, player) {
+  if (ipToEntryKey[IP + player] === lobbyID + player)
+  {
+    return true;
+  }
+  return false;
+}
+
+function parseCookies (request) {
+    var list = {},
+        rc = request.headers.cookie;
+
+    rc && rc.split(';').forEach(function( cookie ) {
+        var parts = cookie.split('=');
+        list[parts.shift().trim()] = decodeURI(parts.join('='));
+    });
+
+    return list;
+}
 
 app.use(express.static(__dirname + '/static'));
 app.set('views', __dirname + '/static/views');
@@ -31,8 +56,30 @@ app.get('/playAI', function(req, res) {
 });
 
 app.get('/playFriend', function(req, res) {
-  res.render('multi', {player: req.query.player, lobbyID: req.query.lobbyID});
-  console.log(players);
+  var player = req.query.player;
+  var lobbyID = req.query.lobbyID;
+
+  var IP = requestIp.getClientIp(req);
+
+  if (player === 'b' || player === 'w')
+  {
+    if (!lobbyCapacity[lobbyID])
+    {
+      lobbyCapacity[lobbyID] = player;
+      ipToEntryKey[IP + player] = lobbyID + player;
+    }
+    else if (lobbyCapacity[lobbyID] === 'w' && player === 'b' || lobbyCapacity[lobbyID] === 'b' && player === 'w')
+    {
+      lobbyCapacity[lobbyID] += player;
+      ipToEntryKey[IP + player] = lobbyID + player;
+    }
+    else if (!allowedAccess(IP, lobbyID, player))
+      player = 'spectator';
+  }
+
+  console.log(lobbyCapacity[lobbyID]);
+
+  res.render('multi', {player: player, lobbyID: req.query.lobbyID});
 });
 
 io.on('connection', function(socket) {
@@ -43,11 +90,12 @@ io.on('connection', function(socket) {
   });
 
   socket.on(moveSignal, function(info) {
+    lobbyPositions[info.lobbyID] = info.pgn;
     io.emit(moveSignal, info);
   });
 
-  socket.on('reqest position', function(info) {
-    io.emit('request position', info);
+  socket.on('request position', function(info) {
+    io.emit('load position', {lobbyID: info.lobbyID, pgn: lobbyPositions[info.lobbyID], player: info.player});
   });
 
   socket.on(resignSignal, function (info) {
@@ -84,10 +132,6 @@ io.on('connection', function(socket) {
 
   socket.on('undo accepted', function (info) {
     io.emit('undo accepted', info);
-  });
-
-  socket.on('request position', function (info) {
-    io.emit('request position', info);
   });
 
 });

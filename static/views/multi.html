@@ -43,17 +43,21 @@
     var rejectUndo = 'rejecting undo';
     var resignSignal = 'player resigned';
 
-    $("p").hover(function(){
-        $(this).css("background-color", "yellow");
-        }, function(){
-        $(this).css("background-color", "pink");
-    });
-
     var enemy;
     if (player === 'w')
       enemy = 'b';
     else if (player === 'b')
       enemy = 'w';
+
+    var isSpectating = function(player)
+    {
+      return (player !== 'b' && player !== 'w')
+    }
+
+    if (isSpectating(player))
+    {
+      $(".fa-3x:not(.fa-plus)").removeAttr("onclick");
+    }
 
     $(".fa-undo").mouseenter(function() {
       $("#undoMethod").show();
@@ -92,15 +96,26 @@
 
     var addPlayer = function() {
       var addPlayerString = "To play a friend, send them this URL:";
-      prompt(addPlayerString, window.location.href.replace('player=' + player, 'player=' + enemy));
+      if (!isSpectating(player))
+        prompt(addPlayerString, window.location.href.replace('player=' + player, 'player=' + enemy));
+      else
+      {
+        addPlayerString = "To add a spectator, send them this URL:";
+        prompt(addPlayerString, window.location.href.replace('player=' + player, 'player=spectator'));
+      }
     }
 
     socket.emit('request position', {lobbyID: lobbyID, player: player});
 
-    socket.on('request position', function (msgData) {
-      if (msgData.lobbyID !== lobbyID || msgData.player === player)
+    socket.on('load position', function (msgData) {
+      if (msgData.lobbyID !== lobbyID || msgData.player !== player)
         return;
-      socket.emit(moveSignal, {pgn: game.pgn(), lobbyID: lobbyID});
+      var pgn = msgData.pgn;
+      if (pgn)
+      {
+        game.load_pgn(pgn);
+        board.position(game.fen());
+      }
     });
 
     var onDragStart = function(source, piece, position, orientation) {
@@ -153,9 +168,12 @@
     socket.on('decline all', function(msgData) {
       if (msgData.lobbyID !== lobbyID)
         return;
-      $(".fa-power-off").attr("onclick","restart();");
-      $(".fa-handshake-o").attr("onclick","offerDraw();");
-      $(".fa-undo").attr("onclick","takeBack();");
+      if (!isSpectating(player))
+      {
+        $(".fa-power-off").attr("onclick","restart();");
+        $(".fa-handshake-o").attr("onclick","offerDraw();");
+        $(".fa-undo").attr("onclick","takeBack();");
+      }
       $(".fa-3x").removeAttr('style');
     });
 
@@ -171,7 +189,10 @@
       if (msgData.lobbyID !== lobbyID || msgData.player === player)
         return;
       $(".fa-undo").css("background-color", "yellow");
-      $(".fa-undo").attr("onclick","undoAccepted();");
+      if (!isSpectating(player))
+      {
+        $(".fa-undo").attr("onclick","undoAccepted();");
+      }
     });
 
     var undoAccepted = function() {
@@ -184,7 +205,10 @@
       game.undo();
       board.position(game.fen());
       $(".fa-undo").removeAttr('style');
-      $(".fa-undo").attr("onclick","takeBack();");
+      if (!isSpectating(player))
+      {
+        $(".fa-undo").attr("onclick","takeBack();");
+      }
     });
 
     var cfg = {
@@ -228,14 +252,20 @@
       if (msgData.lobbyID !== lobbyID || msgData.player === player)
         return;
       $(".fa-power-off").css("background-color", "yellow");
-      $(".fa-power-off").attr("onclick","restartAccepted();");
+      if (!isSpectating(player))
+      {
+        $(".fa-power-off").attr("onclick","restartAccepted();");
+      }
     });
 
     socket.on('accept draw?', function(msgData) {
       if (msgData.lobbyID !== lobbyID || msgData.player === player)
         return;
       $(".fa-handshake-o").css("background-color", "yellow");
-      $(".fa-handshake-o").attr("onclick","drawAccepted();");
+      if (!isSpectating(player))
+      {
+        $(".fa-handshake-o").attr("onclick","drawAccepted();");
+      }
     });
 
     var restartAccepted = function() {
@@ -261,9 +291,12 @@
       hasResigned = false;
       game = new Chess();
       board.position(game.fen());
-      $(".fa-power-off").attr("onclick","restart();");
-      $(".fa-handshake-o").attr("onclick","offerDraw();");
-      $(".fa-undo").attr("onclick","takeBack();");
+      if (!isSpectating(player))
+      {
+        $(".fa-power-off").attr("onclick","restart();");
+        $(".fa-handshake-o").attr("onclick","offerDraw();");
+        $(".fa-undo").attr("onclick","takeBack();");
+      }
     });
 
     if (player === 'b')
