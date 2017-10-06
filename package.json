@@ -1,4 +1,7 @@
 {
+  "engines": {
+    "node": "4.1.1"
+  },
   "name": "chesspro",
   "version": "0.0.1",
   "description": "test socket.io app",
@@ -12,20 +15,18 @@
     "signal": "^3.0.0",
     "signal-js": "^1.0.2",
     "signal.js": "^0.1.5",
-    "socket-io": "^1.0.0"
+    "socket-io": "^1.0.0",
+    "socket.io": "^2.0.3"
   },
   "main": "index.js",
   "devDependencies": {},
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "start": "node index.js"
   },
   "repository": {
     "type": "git",
     "url": "https://github.com//Keyan-Rhm/chessSite.git"
   },
   "author": "",
-  "license": "ISC",
-  "scripts": {
-    "start": "node index.js"
-  }
+  "license": "ISC"
 }
